@@ -18,13 +18,14 @@ import coil.compose.rememberAsyncImagePainter
 import com.perrygarg.injoyapp.domain.model.Movie
 import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.PaddingValues
 
 @Composable
-fun HomeScreen(viewModel: HomeViewModel) {
+fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.dp)) {
     val trendingMovies by viewModel.trendingMovies.collectAsStateWithLifecycle()
     val nowPlayingMovies by viewModel.nowPlayingMovies.collectAsStateWithLifecycle()
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(contentPadding).padding(16.dp)) {
         Text(
             text = "Trending Movies",
             style = MaterialTheme.typography.titleLarge,
