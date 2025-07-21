@@ -1,53 +1,50 @@
 package com.perrygarg.injoyapp.ui
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Surface
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
-import com.perrygarg.injoyapp.domain.model.Movie
-import kotlinx.coroutines.flow.StateFlow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.text.font.FontWeight
+import coil.compose.rememberAsyncImagePainter
+import com.google.accompanist.placeholder.PlaceholderHighlight
+import com.google.accompanist.placeholder.placeholder
+import com.google.accompanist.placeholder.material.shimmer
+import com.perrygarg.injoyapp.domain.model.Movie
 
 @Composable
 fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.dp)) {
-    val trendingMovies by viewModel.trendingMovies.collectAsStateWithLifecycle()
-    val nowPlayingMovies by viewModel.nowPlayingMovies.collectAsStateWithLifecycle()
+    val trendingState by viewModel.trendingState.collectAsStateWithLifecycle()
+    val nowPlayingState by viewModel.nowPlayingState.collectAsStateWithLifecycle()
 
     val onBookmarkClick: (Movie) -> Unit = { /* TODO: Implement bookmark logic */ }
 
-    // Complimentary blue-gray gradient background
     val gradient = Brush.verticalGradient(
         colors = listOf(
             MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
@@ -67,12 +64,20 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
         Column(
             modifier = Modifier
                 .fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(18.dp) // Reduced spacing
+            verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             SectionHeader(title = "Trending Movies")
-            MovieSection(movies = trendingMovies, onBookmarkClick = onBookmarkClick)
+            MovieSection(
+                state = trendingState,
+                onBookmarkClick = onBookmarkClick,
+                onRetry = { viewModel.fetchTrending() }
+            )
             SectionHeader(title = "Now Playing Movies")
-            MovieSection(movies = nowPlayingMovies, onBookmarkClick = onBookmarkClick)
+            MovieSection(
+                state = nowPlayingState,
+                onBookmarkClick = onBookmarkClick,
+                onRetry = { viewModel.fetchNowPlaying() }
+            )
         }
     }
 }
@@ -106,24 +111,158 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun MovieSection(movies: List<Movie>, onBookmarkClick: (Movie) -> Unit) {
-    if (movies.isEmpty()) {
-        Box(
+fun MovieSection(
+    state: SectionUiState<Movie>,
+    onBookmarkClick: (Movie) -> Unit,
+    onRetry: () -> Unit
+) {
+    when (state) {
+        is SectionUiState.Loading -> {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(4) { ShimmerMovieCardPlaceholder() }
+            }
+        }
+        is SectionUiState.Error -> {
+            ErrorState(message = state.message, onRetry = onRetry)
+        }
+        is SectionUiState.Empty -> {
+            NoDataState()
+        }
+        is SectionUiState.Success -> {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(state.data) { movie ->
+                    MovieCard(movie = movie, onBookmarkClick = onBookmarkClick)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ErrorState(message: String, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Filled.ErrorOutline,
+            contentDescription = "Error",
+            tint = MaterialTheme.colorScheme.error,
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = message,
+            color = MaterialTheme.colorScheme.error,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        Button(onClick = onRetry) {
+            Text("Retry")
+        }
+    }
+}
+
+@Composable
+fun NoDataState() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(180.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = Icons.Filled.CloudOff,
+            contentDescription = "No Data",
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+            modifier = Modifier.size(48.dp)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = "No data available",
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun ShimmerMovieCardPlaceholder() {
+    val cardGradient = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.04f),
+            MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+        ),
+        startY = 0f,
+        endY = 400f
+    )
+    Card(
+        modifier = Modifier
+            .width(160.dp)
+            .padding(vertical = 6.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.Transparent,
+        )
+    ) {
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(200.dp),
-            contentAlignment = Alignment.Center
+                .background(cardGradient)
+                .padding(10.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-        }
-    } else {
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp), // Reduced spacing
-            horizontalArrangement = Arrangement.spacedBy(16.dp) // Reduced spacing
-        ) {
-            items(movies) { movie ->
-                MovieCard(movie = movie, onBookmarkClick = onBookmarkClick)
-            }
+            Box(
+                modifier = Modifier
+                    .height(180.dp)
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .placeholder(
+                        visible = true,
+                        highlight = PlaceholderHighlight.shimmer(),
+                        color = Color(0xFFEEEEEE),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Box(
+                modifier = Modifier
+                    .height(18.dp)
+                    .fillMaxWidth(0.7f)
+                    .clip(RoundedCornerShape(6.dp))
+                    .placeholder(
+                        visible = true,
+                        highlight = PlaceholderHighlight.shimmer(),
+                        color = Color(0xFFEEEEEE),
+                        shape = RoundedCornerShape(6.dp)
+                    )
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            Box(
+                modifier = Modifier
+                    .height(14.dp)
+                    .fillMaxWidth(0.4f)
+                    .clip(RoundedCornerShape(6.dp))
+                    .placeholder(
+                        visible = true,
+                        highlight = PlaceholderHighlight.shimmer(),
+                        color = Color(0xFFEEEEEE),
+                        shape = RoundedCornerShape(6.dp)
+                    )
+            )
         }
     }
 }
@@ -240,4 +379,4 @@ fun MovieCard(
             }
         }
     }
-} 
+}
