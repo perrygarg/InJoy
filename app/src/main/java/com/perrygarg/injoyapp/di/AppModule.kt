@@ -57,7 +57,8 @@ val appModule = module {
             getTrendingMoviesUseCase = get(),
             getNowPlayingMoviesUseCase = get(),
             getMoviesByCategory = { category -> get<MovieRepository>().getMoviesByCategory(category) },
-            updateBookmarkUseCase = get()
+            updateBookmarkUseCase = get(),
+            repository = get()
         )
     }
 } 

@@ -19,13 +19,17 @@ data class MovieDto(
 )
 
 data class MovieResponseDto(
-    @Json(name = "results") val results: List<MovieDto>
+    @Json(name = "page") val page: Int,
+    @Json(name = "results") val results: List<MovieDto>,
+    @Json(name = "total_pages") val total_pages: Int,
+    @Json(name = "total_results") val total_results: Int
 )
 
 interface MovieApiService {
-    @GET("trending/movie/day")
+    @GET("movie/popular")
     suspend fun getTrendingMovies(
-        @Query("language") language: String = "en-US"
+        @Query("language") language: String = "en-US",
+        @Query("page") page: Int = 1
     ): MovieResponseDto
 
     @GET("movie/now_playing")

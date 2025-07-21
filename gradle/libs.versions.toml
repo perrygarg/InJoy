@@ -9,6 +9,8 @@ espressoCore = "3.5.1"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.8.0"
 composeBom = "2024.09.00"
+pagingCompose = "3.2.1"
+pagingRuntime = "3.2.1"
 retrofit = "2.9.0"
 okhttp = "4.12.0"
 gson = "2.10.1"
@@ -18,11 +20,15 @@ lifecycleCompose = "2.7.0"
 moshi = "1.15.1"
 koin = "3.5.3"
 koinCompose = "3.5.3"
+roomPaging = "2.6.1"
 
 [libraries]
 accompanist-placeholder-material = { module = "com.google.accompanist:accompanist-placeholder-material", version.ref = "accompanistPlaceholderMaterial" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "pagingCompose" }
+androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "pagingRuntime" }
+androidx-room-paging = { module = "androidx.room:room-paging", version.ref = "roomPaging" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }

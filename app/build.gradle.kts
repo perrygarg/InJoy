@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.ksp)
+    implementation(libs.androidx.room.paging)
 
     // Coil for Compose
     implementation(libs.coil.compose)
@@ -98,4 +99,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.accompanist.placeholder.material)
+    implementation(libs.androidx.paging.runtime)
+    implementation(libs.androidx.paging.compose)
 }

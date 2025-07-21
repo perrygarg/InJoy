@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
 import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
+import androidx.paging.PagingData
+import kotlinx.coroutines.flow.Flow
+import com.perrygarg.injoyapp.domain.repository.MovieRepository
 
 sealed class SectionUiState<out T> {
     object Loading : SectionUiState<Nothing>()
@@ -24,13 +27,16 @@ class HomeViewModel(
     private val getTrendingMoviesUseCase: GetTrendingMoviesUseCase,
     private val getNowPlayingMoviesUseCase: GetNowPlayingMoviesUseCase,
     private val getMoviesByCategory: (String) -> kotlinx.coroutines.flow.Flow<List<Movie>>,
-    private val updateBookmarkUseCase: UpdateBookmarkUseCase
+    private val updateBookmarkUseCase: UpdateBookmarkUseCase,
+    private val repository: MovieRepository
 ) : ViewModel() {
     private val _trendingState = MutableStateFlow<SectionUiState<Movie>>(SectionUiState.Loading)
     val trendingState: StateFlow<SectionUiState<Movie>> = _trendingState.asStateFlow()
 
     private val _nowPlayingState = MutableStateFlow<SectionUiState<Movie>>(SectionUiState.Loading)
     val nowPlayingState: StateFlow<SectionUiState<Movie>> = _nowPlayingState.asStateFlow()
+
+    val trendingPagingData: Flow<PagingData<Movie>> = repository.getTrendingMoviesPager()
 
     private var trendingJob: kotlinx.coroutines.Job? = null
     private var nowPlayingJob: kotlinx.coroutines.Job? = null

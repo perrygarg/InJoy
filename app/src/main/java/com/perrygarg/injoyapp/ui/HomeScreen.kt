@@ -1,46 +1,104 @@
 package com.perrygarg.injoyapp.ui
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.placeholder.PlaceholderHighlight
-import com.google.accompanist.placeholder.placeholder
 import com.google.accompanist.placeholder.material.shimmer
+import com.google.accompanist.placeholder.placeholder
 import com.perrygarg.injoyapp.domain.model.Movie
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+
+fun isNetworkAvailable(context: Context): Boolean {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val network = connectivityManager.activeNetwork ?: return false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+}
+
+fun observeNetworkStatus(context: Context) = callbackFlow<Boolean> {
+    val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val callback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: android.net.Network) {
+            trySend(true)
+        }
+        override fun onLost(network: android.net.Network) {
+            trySend(false)
+        }
+    }
+    val networkRequest = android.net.NetworkRequest.Builder()
+        .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        .build()
+    connectivityManager.registerNetworkCallback(networkRequest, callback)
+    trySend(isNetworkAvailable(context)) // Initial value
+    awaitClose { connectivityManager.unregisterNetworkCallback(callback) }
+}
 
 @Composable
 fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = PaddingValues(0.dp)) {
-    val trendingState by viewModel.trendingState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    var isOffline by remember { mutableStateOf(!isNetworkAvailable(context)) }
+    LaunchedEffect(context) {
+        observeNetworkStatus(context)
+            .distinctUntilChanged()
+            .collect { isOnline ->
+                isOffline = !isOnline
+            }
+    }
+    val trendingPagingItems = viewModel.trendingPagingData.collectAsLazyPagingItems()
     val nowPlayingState by viewModel.nowPlayingState.collectAsStateWithLifecycle()
 
     val onBookmarkClick: (Movie) -> Unit = { viewModel.toggleBookmark(it) }
@@ -67,11 +125,10 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             SectionHeader(title = "Trending Movies")
-            MovieSection(
-                state = trendingState,
-                onBookmarkClick = onBookmarkClick,
-                onRetry = { viewModel.fetchTrending() }
-            )
+            if (isOffline) {
+                OfflineWarningTooltip()
+            }
+            TrendingMoviePagingSection(trendingPagingItems, onBookmarkClick)
             SectionHeader(title = "Now Playing Movies")
             MovieSection(
                 state = nowPlayingState,
@@ -145,6 +202,46 @@ fun MovieSection(
 }
 
 @Composable
+fun TrendingMoviePagingSection(
+    pagingItems: LazyPagingItems<Movie>,
+    onBookmarkClick: (Movie) -> Unit
+) {
+    when (pagingItems.loadState.refresh) {
+        is androidx.paging.LoadState.Loading -> {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(4) { ShimmerMovieCardPlaceholder() }
+            }
+        }
+        is androidx.paging.LoadState.Error -> {
+            ErrorState(message = "Failed to load movies", onRetry = { pagingItems.retry() })
+        }
+        else -> {
+            if (pagingItems.itemCount == 0) {
+                NoDataState()
+            } else {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(count = pagingItems.itemCount) { index ->
+                        val movie = pagingItems[index]
+                        if (movie != null) {
+                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick)
+                        }
+                    }
+                    if (pagingItems.loadState.append is androidx.paging.LoadState.Loading) {
+                        item { ShimmerMovieCardPlaceholder() }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun ErrorState(message: String, onRetry: () -> Unit) {
     Column(
         modifier = Modifier
@@ -194,6 +291,30 @@ fun NoDataState() {
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun OfflineWarningTooltip() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = Icons.Filled.CloudOff,
+            contentDescription = "Offline",
+            tint = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.size(20.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "You are offline. Data may be stale.",
+            color = MaterialTheme.colorScheme.secondary,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Medium
         )
     }
 }
