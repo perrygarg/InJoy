@@ -28,4 +28,18 @@ fun MovieEntity.toDomain(): Movie = Movie(
     popularity = this.popularity,
     category = this.category,
     isBookmarked = this.isBookmarked
+)
+
+fun Movie.toEntity(category: String = this.category): MovieEntity = MovieEntity(
+    id = this.id,
+    title = this.title,
+    overview = this.overview,
+    releaseDate = this.releaseDate,
+    posterPath = this.posterPath,
+    backdropPath = this.backdropPath,
+    voteAverage = this.voteAverage,
+    voteCount = this.voteCount,
+    popularity = this.popularity,
+    category = category,
+    isBookmarked = this.isBookmarked
 ) 

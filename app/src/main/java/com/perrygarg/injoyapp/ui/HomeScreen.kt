@@ -43,7 +43,7 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
     val trendingState by viewModel.trendingState.collectAsStateWithLifecycle()
     val nowPlayingState by viewModel.nowPlayingState.collectAsStateWithLifecycle()
 
-    val onBookmarkClick: (Movie) -> Unit = { /* TODO: Implement bookmark logic */ }
+    val onBookmarkClick: (Movie) -> Unit = { viewModel.toggleBookmark(it) }
 
     val gradient = Brush.verticalGradient(
         colors = listOf(

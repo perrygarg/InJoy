@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CancellationException
+import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 
 sealed class SectionUiState<out T> {
     object Loading : SectionUiState<Nothing>()
@@ -22,7 +23,8 @@ sealed class SectionUiState<out T> {
 class HomeViewModel(
     private val getTrendingMoviesUseCase: GetTrendingMoviesUseCase,
     private val getNowPlayingMoviesUseCase: GetNowPlayingMoviesUseCase,
-    private val getMoviesByCategory: (String) -> kotlinx.coroutines.flow.Flow<List<Movie>>
+    private val getMoviesByCategory: (String) -> kotlinx.coroutines.flow.Flow<List<Movie>>,
+    private val updateBookmarkUseCase: UpdateBookmarkUseCase
 ) : ViewModel() {
     private val _trendingState = MutableStateFlow<SectionUiState<Movie>>(SectionUiState.Loading)
     val trendingState: StateFlow<SectionUiState<Movie>> = _trendingState.asStateFlow()
@@ -42,22 +44,37 @@ class HomeViewModel(
         trendingJob?.cancel()
         _trendingState.value = SectionUiState.Loading
         trendingJob = viewModelScope.launch {
-            try {
-                val apiResult = getTrendingMoviesUseCase()
-                if (apiResult.isFailure) {
-                    _trendingState.value = SectionUiState.Error(apiResult.exceptionOrNull()?.message ?: "Failed to fetch trending movies")
-                    return@launch
-                }
-                getMoviesByCategory("TRENDING").collectLatest { list ->
+            var emitted = false
+            var apiFailed: Throwable? = null
+            val dbFlow = getMoviesByCategory("TRENDING")
+            val dbJob = launch {
+                dbFlow.collectLatest { list ->
+                    emitted = true
                     _trendingState.value = when {
+                        list.isEmpty() && apiFailed != null -> SectionUiState.Error(apiFailed?.message ?: "Unknown error")
                         list.isEmpty() -> SectionUiState.Empty
                         else -> SectionUiState.Success(list)
                     }
                 }
-            } catch (e: CancellationException) {
-                // ignore
+            }
+            try {
+                val apiResult = getTrendingMoviesUseCase()
+                if (apiResult.isFailure) {
+                    apiFailed = apiResult.exceptionOrNull()
+                    // If DB has not emitted yet, wait for it; else, update state only if DB is empty
+                    if (!emitted) {
+                        // Wait for DB emission
+                    } else if ((_trendingState.value as? SectionUiState.Success)?.data?.isEmpty() != false) {
+                        _trendingState.value = SectionUiState.Error(apiFailed?.message ?: "Failed to fetch trending movies")
+                    }
+                }
             } catch (e: Exception) {
-                _trendingState.value = SectionUiState.Error(e.message ?: "Unknown error")
+                apiFailed = e
+                if (!emitted) {
+                    // Wait for DB emission
+                } else if ((_trendingState.value as? SectionUiState.Success)?.data?.isEmpty() != false) {
+                    _trendingState.value = SectionUiState.Error(e.message ?: "Unknown error")
+                }
             }
         }
     }
@@ -66,23 +83,43 @@ class HomeViewModel(
         nowPlayingJob?.cancel()
         _nowPlayingState.value = SectionUiState.Loading
         nowPlayingJob = viewModelScope.launch {
-            try {
-                val apiResult = getNowPlayingMoviesUseCase()
-                if (apiResult.isFailure) {
-                    _nowPlayingState.value = SectionUiState.Error(apiResult.exceptionOrNull()?.message ?: "Failed to fetch now playing movies")
-                    return@launch
-                }
-                getMoviesByCategory("NOW_PLAYING").collectLatest { list ->
+            var emitted = false
+            var apiFailed: Throwable? = null
+            val dbFlow = getMoviesByCategory("NOW_PLAYING")
+            val dbJob = launch {
+                dbFlow.collectLatest { list ->
+                    emitted = true
                     _nowPlayingState.value = when {
+                        list.isEmpty() && apiFailed != null -> SectionUiState.Error(apiFailed?.message ?: "Unknown error")
                         list.isEmpty() -> SectionUiState.Empty
                         else -> SectionUiState.Success(list)
                     }
                 }
-            } catch (e: CancellationException) {
-                // ignore
-            } catch (e: Exception) {
-                _nowPlayingState.value = SectionUiState.Error(e.message ?: "Unknown error")
             }
+            try {
+                val apiResult = getNowPlayingMoviesUseCase()
+                if (apiResult.isFailure) {
+                    apiFailed = apiResult.exceptionOrNull()
+                    if (!emitted) {
+                        // Wait for DB emission
+                    } else if ((_nowPlayingState.value as? SectionUiState.Success)?.data?.isEmpty() != false) {
+                        _nowPlayingState.value = SectionUiState.Error(apiFailed?.message ?: "Failed to fetch now playing movies")
+                    }
+                }
+            } catch (e: Exception) {
+                apiFailed = e
+                if (!emitted) {
+                    // Wait for DB emission
+                } else if ((_nowPlayingState.value as? SectionUiState.Success)?.data?.isEmpty() != false) {
+                    _nowPlayingState.value = SectionUiState.Error(e.message ?: "Unknown error")
+                }
+            }
+        }
+    }
+
+    fun toggleBookmark(movie: Movie) {
+        viewModelScope.launch {
+            updateBookmarkUseCase(movie, !movie.isBookmarked)
         }
     }
 } 

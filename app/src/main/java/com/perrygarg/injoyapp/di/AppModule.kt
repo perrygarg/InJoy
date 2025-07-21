@@ -16,6 +16,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import okhttp3.OkHttpClient
 import com.perrygarg.injoyapp.BuildConfig
+import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 
 val appModule = module {
     single {
@@ -50,11 +51,13 @@ val appModule = module {
     single<MovieRepository> { MovieRepositoryImpl(get(), get()) }
     factory { GetTrendingMoviesUseCase(get()) }
     factory { GetNowPlayingMoviesUseCase(get()) }
+    factory { UpdateBookmarkUseCase(get()) }
     viewModel {
         HomeViewModel(
             getTrendingMoviesUseCase = get(),
             getNowPlayingMoviesUseCase = get(),
-            getMoviesByCategory = { category -> get<MovieRepository>().getMoviesByCategory(category) }
+            getMoviesByCategory = { category -> get<MovieRepository>().getMoviesByCategory(category) },
+            updateBookmarkUseCase = get()
         )
     }
 } 
