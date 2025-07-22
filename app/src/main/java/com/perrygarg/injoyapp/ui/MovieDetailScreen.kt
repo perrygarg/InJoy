@@ -6,7 +6,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -50,7 +52,8 @@ fun MovieDetailScreen(
                     IconButton(onClick = onBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                windowInsets = TopAppBarDefaults.windowInsets
             )
         }
     ) { padding ->
@@ -73,9 +76,12 @@ fun MovieDetailScreen(
                         enter = fadeIn(),
                         exit = fadeOut()
                     ) {
+                        val scrollState = rememberScrollState()
+
                         Column(
                             modifier = Modifier
                                 .fillMaxSize()
+                                .verticalScroll(scrollState)
                                 .padding(20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
