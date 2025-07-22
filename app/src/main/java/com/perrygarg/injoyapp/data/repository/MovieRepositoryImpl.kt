@@ -62,6 +62,10 @@ class MovieRepositoryImpl(
         Result.failure(e)
     }
 
+    override suspend fun getMovieById(id: Int): Movie? {
+        return movieDao.getMovieById(id)?.toDomain()
+    }
+
     @OptIn(ExperimentalPagingApi::class)
     override fun getTrendingMoviesPager(): Flow<PagingData<Movie>> =
         Pager(

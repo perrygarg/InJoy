@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.Channel
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 sealed class SectionUiState<out T> {
@@ -43,6 +45,9 @@ class HomeViewModel(
 
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
+
+    private val _navigationEvent = Channel<Int>(Channel.BUFFERED)
+    val navigationEvent = _navigationEvent.receiveAsFlow()
 
     init {
         fetchTrending()
@@ -129,6 +134,12 @@ class HomeViewModel(
     fun toggleBookmark(movie: Movie) {
         viewModelScope.launch {
             updateBookmarkUseCase(movie, !movie.isBookmarked)
+        }
+    }
+
+    fun navigateToDetail(movie: Movie) {
+        viewModelScope.launch {
+            _navigationEvent.send(movie.id)
         }
     }
 } 

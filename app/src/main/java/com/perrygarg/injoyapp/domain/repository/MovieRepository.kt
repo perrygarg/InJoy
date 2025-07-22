@@ -11,4 +11,5 @@ interface MovieRepository {
     fun getTrendingMoviesPager(): Flow<PagingData<Movie>>
     fun getNowPlayingMoviesPager(): Flow<PagingData<Movie>>
     suspend fun updateBookmark(movie: Movie, bookmarked: Boolean): Result<Unit>
+    suspend fun getMovieById(id: Int): Movie?
 } 

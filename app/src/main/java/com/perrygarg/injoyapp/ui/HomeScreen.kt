@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -139,11 +140,15 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
             }
             item { SectionHeader(title = "Trending Movies") }
             item {
-                TrendingMoviePagingSection(trendingPagingItems, onBookmarkClick)
+                TrendingMoviePagingSection(trendingPagingItems, onBookmarkClick) { movie ->
+                    viewModel.navigateToDetail(movie)
+                }
             }
             item { SectionHeader(title = "Now Playing Movies") }
             item {
-                NowPlayingMoviePagingSection(nowPlayingPagingItems, onBookmarkClick)
+                NowPlayingMoviePagingSection(nowPlayingPagingItems, onBookmarkClick) { movie ->
+                    viewModel.navigateToDetail(movie)
+                }
             }
         }
     }
@@ -214,7 +219,8 @@ fun MovieSection(
 @Composable
 fun TrendingMoviePagingSection(
     pagingItems: LazyPagingItems<Movie>,
-    onBookmarkClick: (Movie) -> Unit
+    onBookmarkClick: (Movie) -> Unit,
+    onMovieClick: (Movie) -> Unit
 ) {
     when (pagingItems.loadState.refresh) {
         is androidx.paging.LoadState.Loading -> {
@@ -239,7 +245,7 @@ fun TrendingMoviePagingSection(
                     items(count = pagingItems.itemCount) { index ->
                         val movie = pagingItems[index]
                         if (movie != null) {
-                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick)
+                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick, onClick = { onMovieClick(movie) })
                         }
                     }
                     if (pagingItems.loadState.append is androidx.paging.LoadState.Loading) {
@@ -254,7 +260,8 @@ fun TrendingMoviePagingSection(
 @Composable
 fun NowPlayingMoviePagingSection(
     pagingItems: LazyPagingItems<Movie>,
-    onBookmarkClick: (Movie) -> Unit
+    onBookmarkClick: (Movie) -> Unit,
+    onMovieClick: (Movie) -> Unit
 ) {
     when (pagingItems.loadState.refresh) {
         is androidx.paging.LoadState.Loading -> {
@@ -279,7 +286,7 @@ fun NowPlayingMoviePagingSection(
                     items(count = pagingItems.itemCount) { index ->
                         val movie = pagingItems[index]
                         if (movie != null) {
-                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick)
+                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick, onClick = { onMovieClick(movie) })
                         }
                     }
                     if (pagingItems.loadState.append is androidx.paging.LoadState.Loading) {
@@ -441,7 +448,8 @@ fun ShimmerMovieCardPlaceholder() {
 @Composable
 fun MovieCard(
     movie: Movie,
-    onBookmarkClick: (Movie) -> Unit
+    onBookmarkClick: (Movie) -> Unit,
+    onClick: (() -> Unit)? = null
 ) {
     // Subtle vertical gradient for card background
     val cardGradient = Brush.verticalGradient(
@@ -455,7 +463,8 @@ fun MovieCard(
     Card(
         modifier = Modifier
             .width(160.dp)
-            .padding(vertical = 6.dp),
+            .padding(vertical = 6.dp)
+            .clickable(enabled = onClick != null) { onClick?.invoke() },
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
