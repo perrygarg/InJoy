@@ -66,6 +66,9 @@ class MovieRepositoryImpl(
         return movieDao.getMovieById(id)?.toDomain()
     }
 
+    override fun getBookmarkedMovies(): Flow<List<Movie>> =
+        movieDao.getBookmarkedMovies().map { list -> list.map { it.toDomain() } }
+
     @OptIn(ExperimentalPagingApi::class)
     override fun getTrendingMoviesPager(): Flow<PagingData<Movie>> =
         Pager(

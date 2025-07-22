@@ -19,6 +19,8 @@ import com.perrygarg.injoyapp.BuildConfig
 import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 import com.perrygarg.injoyapp.domain.GetMovieDetailUseCase
 import com.perrygarg.injoyapp.ui.MovieDetailViewModel
+import com.perrygarg.injoyapp.domain.GetBookmarkedMoviesUseCase
+import com.perrygarg.injoyapp.ui.SavedMoviesViewModel
 
 val appModule = module {
     single {
@@ -55,6 +57,7 @@ val appModule = module {
     factory { GetNowPlayingMoviesUseCase(get()) }
     factory { UpdateBookmarkUseCase(get()) }
     factory { GetMovieDetailUseCase(get()) }
+    factory { GetBookmarkedMoviesUseCase(get()) }
     viewModel {
         HomeViewModel(
             getTrendingMoviesUseCase = get(),
@@ -67,6 +70,12 @@ val appModule = module {
     viewModel {
         MovieDetailViewModel(
             getMovieDetailUseCase = get(),
+            updateBookmarkUseCase = get()
+        )
+    }
+    viewModel {
+        SavedMoviesViewModel(
+            getBookmarkedMoviesUseCase = get(),
             updateBookmarkUseCase = get()
         )
     }

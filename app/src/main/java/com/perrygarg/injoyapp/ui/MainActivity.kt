@@ -18,6 +18,18 @@ import androidx.navigation.navDeepLink
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.runtime.remember
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.unit.dp
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,22 +38,59 @@ class MainActivity : ComponentActivity() {
         setContent {
             InJoyTheme {
                 val navController = rememberNavController()
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val homeViewModel: HomeViewModel = koinViewModel()
+                val bottomNavItems = listOf(
+                    BottomNavItem("Home", "home", Icons.Filled.Home),
+                    BottomNavItem("Search", "search", Icons.Filled.Search),
+                    BottomNavItem("Saved", "saved", Icons.Filled.Favorite)
+                )
+                val currentRoute = navController.currentBackStackEntryFlow.collectAsStateWithLifecycle(null).value?.destination?.route
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    bottomBar = {
+                        NavigationBar {
+                            bottomNavItems.forEach { item ->
+                                NavigationBarItem(
+                                    selected = currentRoute == item.route || (item.route == "home" && currentRoute == null),
+                                    onClick = {
+                                        if (currentRoute != item.route) {
+                                            navController.navigate(item.route) {
+                                                popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }
+                                    },
+                                    icon = { Icon(item.icon, contentDescription = item.label) },
+                                    label = { Text(item.label) }
+                                )
+                            }
+                        }
+                    }
+                ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = "home"
+                        startDestination = "home",
+                        modifier = Modifier.padding(innerPadding)
                     ) {
                         composable("home") {
+                            val homeViewModel: HomeViewModel = koinViewModel()
                             HomeScreen(
                                 viewModel = homeViewModel,
-                                contentPadding = innerPadding
+                                contentPadding = PaddingValues(0.dp)
                             )
                             val navigationEvent by homeViewModel.navigationEvent.collectAsStateWithLifecycle(null)
                             LaunchedEffect(navigationEvent) {
                                 navigationEvent?.let { movieId ->
                                     navController.navigate("detail/$movieId")
                                 }
+                            }
+                        }
+                        composable("search") {
+                            SearchScreen()
+                        }
+                        composable("saved") {
+                            SavedMoviesScreen { movieId ->
+                                navController.navigate("detail/$movieId")
                             }
                         }
                         composable(
@@ -63,3 +112,5 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
+data class BottomNavItem(val label: String, val route: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
