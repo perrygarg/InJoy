@@ -1,4 +1,4 @@
-package com.perrygarg.injoyapp.data.trending
+package com.perrygarg.injoyapp.data.mediator
 
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
@@ -74,4 +74,4 @@ class TrendingRemoteMediator(
             }
         }
     }
-} 
+}

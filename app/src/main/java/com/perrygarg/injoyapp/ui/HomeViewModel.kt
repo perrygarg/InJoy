@@ -37,6 +37,7 @@ class HomeViewModel(
     val nowPlayingState: StateFlow<SectionUiState<Movie>> = _nowPlayingState.asStateFlow()
 
     val trendingPagingData: Flow<PagingData<Movie>> = repository.getTrendingMoviesPager()
+    val nowPlayingPagingData: Flow<PagingData<Movie>> = repository.getNowPlayingMoviesPager()
 
     private var trendingJob: kotlinx.coroutines.Job? = null
     private var nowPlayingJob: kotlinx.coroutines.Job? = null

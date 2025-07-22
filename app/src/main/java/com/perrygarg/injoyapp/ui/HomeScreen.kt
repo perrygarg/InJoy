@@ -100,6 +100,7 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
     }
     val trendingPagingItems = viewModel.trendingPagingData.collectAsLazyPagingItems()
     val nowPlayingState by viewModel.nowPlayingState.collectAsStateWithLifecycle()
+    val nowPlayingPagingItems = viewModel.nowPlayingPagingData.collectAsLazyPagingItems()
 
     val onBookmarkClick: (Movie) -> Unit = { viewModel.toggleBookmark(it) }
 
@@ -124,17 +125,13 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
                 .fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            SectionHeader(title = "Trending Movies")
             if (isOffline) {
                 OfflineWarningTooltip()
             }
+            SectionHeader(title = "Trending Movies")
             TrendingMoviePagingSection(trendingPagingItems, onBookmarkClick)
             SectionHeader(title = "Now Playing Movies")
-            MovieSection(
-                state = nowPlayingState,
-                onBookmarkClick = onBookmarkClick,
-                onRetry = { viewModel.fetchNowPlaying() }
-            )
+            NowPlayingMoviePagingSection(nowPlayingPagingItems, onBookmarkClick)
         }
     }
 }
@@ -242,6 +239,46 @@ fun TrendingMoviePagingSection(
 }
 
 @Composable
+fun NowPlayingMoviePagingSection(
+    pagingItems: LazyPagingItems<Movie>,
+    onBookmarkClick: (Movie) -> Unit
+) {
+    when (pagingItems.loadState.refresh) {
+        is androidx.paging.LoadState.Loading -> {
+            LazyRow(
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(4) { ShimmerMovieCardPlaceholder() }
+            }
+        }
+        is androidx.paging.LoadState.Error -> {
+            ErrorState(message = "Failed to load movies", onRetry = { pagingItems.retry() })
+        }
+        else -> {
+            if (pagingItems.itemCount == 0) {
+                NoDataState()
+            } else {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    items(count = pagingItems.itemCount) { index ->
+                        val movie = pagingItems[index]
+                        if (movie != null) {
+                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick)
+                        }
+                    }
+                    if (pagingItems.loadState.append is androidx.paging.LoadState.Loading) {
+                        item { ShimmerMovieCardPlaceholder() }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun ErrorState(message: String, onRetry: () -> Unit) {
     Column(
         modifier = Modifier
@@ -300,7 +337,7 @@ fun OfflineWarningTooltip() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 4.dp),
+            .padding(start = 20.dp, bottom = 4.dp, top = 20.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(

@@ -12,9 +12,10 @@ import kotlinx.coroutines.flow.map
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
-import com.perrygarg.injoyapp.data.trending.TrendingRemoteMediator
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.map
+import com.perrygarg.injoyapp.data.mediator.NowPlayingRemoteMediator
+import com.perrygarg.injoyapp.data.mediator.TrendingRemoteMediator
 
 class MovieRepositoryImpl(
     private val movieDao: MovieDao,
@@ -72,5 +73,18 @@ class MovieRepositoryImpl(
             ),
             remoteMediator = TrendingRemoteMediator(movieDao, movieApiService),
             pagingSourceFactory = { movieDao.pagingSourceByCategory("TRENDING") }
+        ).flow.map { pagingData -> pagingData.map { it.toDomain() } }
+
+    @OptIn(ExperimentalPagingApi::class)
+    override fun getNowPlayingMoviesPager(): Flow<PagingData<Movie>> =
+        Pager(
+            config = PagingConfig(
+                pageSize = 20,
+                initialLoadSize = 20,
+                prefetchDistance = 1,
+                enablePlaceholders = false
+            ),
+            remoteMediator = NowPlayingRemoteMediator(movieDao, movieApiService),
+            pagingSourceFactory = { movieDao.pagingSourceByCategory("NOW_PLAYING") }
         ).flow.map { pagingData -> pagingData.map { it.toDomain() } }
 } 
