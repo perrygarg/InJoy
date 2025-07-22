@@ -2,19 +2,18 @@ package com.perrygarg.injoyapp.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.perrygarg.injoyapp.domain.GetTrendingMoviesUseCase
+import androidx.paging.PagingData
 import com.perrygarg.injoyapp.domain.GetNowPlayingMoviesUseCase
+import com.perrygarg.injoyapp.domain.GetTrendingMoviesUseCase
+import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 import com.perrygarg.injoyapp.domain.model.Movie
+import com.perrygarg.injoyapp.domain.repository.MovieRepository
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.CancellationException
-import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
-import androidx.paging.PagingData
-import kotlinx.coroutines.flow.Flow
-import com.perrygarg.injoyapp.domain.repository.MovieRepository
 
 sealed class SectionUiState<out T> {
     object Loading : SectionUiState<Nothing>()
@@ -41,6 +40,9 @@ class HomeViewModel(
 
     private var trendingJob: kotlinx.coroutines.Job? = null
     private var nowPlayingJob: kotlinx.coroutines.Job? = null
+
+    private val _refreshing = MutableStateFlow(false)
+    val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()
 
     init {
         fetchTrending()

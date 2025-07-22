@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -57,6 +58,8 @@ import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.placeholder.PlaceholderHighlight
 import com.google.accompanist.placeholder.material.shimmer
 import com.google.accompanist.placeholder.placeholder
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.perrygarg.injoyapp.domain.model.Movie
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -99,8 +102,8 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
             }
     }
     val trendingPagingItems = viewModel.trendingPagingData.collectAsLazyPagingItems()
-    val nowPlayingState by viewModel.nowPlayingState.collectAsStateWithLifecycle()
     val nowPlayingPagingItems = viewModel.nowPlayingPagingData.collectAsLazyPagingItems()
+    val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
 
     val onBookmarkClick: (Movie) -> Unit = { viewModel.toggleBookmark(it) }
 
@@ -114,24 +117,34 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
         endY = 1200f
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(gradient)
-            .padding(contentPadding)
+    SwipeRefresh(
+        state = rememberSwipeRefreshState(isRefreshing = refreshing),
+        onRefresh = {
+            if (!isOffline) {
+                trendingPagingItems.refresh()
+                nowPlayingPagingItems.refresh()
+                viewModel.fetchTrending()
+                viewModel.fetchNowPlaying()
+            }
+        },
+        indicatorPadding = contentPadding
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize(),
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+                .padding(top = 30.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             if (isOffline) {
-                OfflineWarningTooltip()
+                item { OfflineWarningTooltip() }
             }
-            SectionHeader(title = "Trending Movies")
-            TrendingMoviePagingSection(trendingPagingItems, onBookmarkClick)
-            SectionHeader(title = "Now Playing Movies")
-            NowPlayingMoviePagingSection(nowPlayingPagingItems, onBookmarkClick)
+            item { SectionHeader(title = "Trending Movies") }
+            item {
+                TrendingMoviePagingSection(trendingPagingItems, onBookmarkClick)
+            }
+            item { SectionHeader(title = "Now Playing Movies") }
+            item {
+                NowPlayingMoviePagingSection(nowPlayingPagingItems, onBookmarkClick)
+            }
         }
     }
 }
