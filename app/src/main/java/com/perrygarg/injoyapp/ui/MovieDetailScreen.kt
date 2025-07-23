@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
@@ -44,145 +46,143 @@ fun MovieDetailScreen(
         viewModel.loadMovie(movieId)
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Movie Details") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Overlay to block bottom nav interaction
+        Surface(
+            modifier = Modifier.matchParentSize(),
+            color = Color.Transparent,
+            onClick = {}
+        ) {}
+        Column(modifier = Modifier.fillMaxSize()) {
+            // Back button at top-left
+            IconButton(
+                onClick = onBack,
                 modifier = Modifier
                     .statusBarsPadding()
-            )
-        }
-    ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(top = 0.dp, bottom = padding.calculateBottomPadding())) {
+                    .padding(start = 8.dp, top = 8.dp)
+                    .align(Alignment.Start)
+            ) {
+                Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+            }
             when (state) {
                 is MovieDetailUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
                 }
                 is MovieDetailUiState.Error -> {
-                    Text(
-                        text = (state as MovieDetailUiState.Error).message,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = (state as MovieDetailUiState.Error).message,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
                 }
                 is MovieDetailUiState.Success -> {
                     val movie = (state as MovieDetailUiState.Success).movie
-                    AnimatedVisibility(
-                        visible = true,
-                        enter = fadeIn(),
-                        exit = fadeOut()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 20.dp)
+                            .navigationBarsPadding(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        val scrollState = rememberScrollState()
-
-                        Column(
+                        val posterUrl = if (movie.posterPath.isNotBlank())
+                            "https://image.tmdb.org/t/p/w500${movie.posterPath}"
+                        else null
+                        Box(
                             modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(scrollState)
-                                .padding(20.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                                .height(320.dp)
+                                .fillMaxWidth(0.7f)
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
+                            contentAlignment = Alignment.TopEnd
                         ) {
-                            val posterUrl = if (movie.posterPath.isNotBlank())
-                                "https://image.tmdb.org/t/p/w500${movie.posterPath}"
-                            else null
-                            Box(
-                                modifier = Modifier
-                                    .height(320.dp)
-                                    .fillMaxWidth(0.7f)
-                                    .clip(RoundedCornerShape(18.dp))
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
-                                contentAlignment = Alignment.TopEnd
+                            if (posterUrl != null) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(posterUrl),
+                                    contentDescription = movie.title,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text("No Image", textAlign = TextAlign.Center)
+                                }
+                            }
+                            IconButton(
+                                onClick = { viewModel.toggleBookmark(movie) },
+                                modifier = Modifier.padding(8.dp)
                             ) {
-                                if (posterUrl != null) {
-                                    Image(
-                                        painter = rememberAsyncImagePainter(posterUrl),
-                                        contentDescription = movie.title,
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentScale = ContentScale.Crop
+                                if (movie.isBookmarked) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Favorite,
+                                        contentDescription = "Bookmarked",
+                                        tint = Color.Red
                                     )
                                 } else {
-                                    Box(
-                                        modifier = Modifier.fillMaxSize(),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text("No Image", textAlign = TextAlign.Center)
-                                    }
-                                }
-                                IconButton(
-                                    onClick = { viewModel.toggleBookmark(movie) },
-                                    modifier = Modifier.padding(8.dp)
-                                ) {
-                                    if (movie.isBookmarked) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Favorite,
-                                            contentDescription = "Bookmarked",
-                                            tint = Color.Red
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Outlined.FavoriteBorder,
-                                            contentDescription = "Bookmark",
-                                            tint = Color.White
-                                        )
-                                    }
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(18.dp))
-                            Text(
-                                text = movie.title,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 26.sp
-                                ),
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = movie.overview,
-                                style = MaterialTheme.typography.bodyLarge,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Row(
-                                horizontalArrangement = Arrangement.SpaceEvenly,
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("Rating", fontWeight = FontWeight.SemiBold)
-                                    Text(
-                                        text = String.format("%.1f", movie.voteAverage),
-                                        color = MaterialTheme.colorScheme.tertiary,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("Popularity", fontWeight = FontWeight.SemiBold)
-                                    Text(
-                                        text = String.format("%.1f", movie.popularity),
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                    Text("Votes", fontWeight = FontWeight.SemiBold)
-                                    Text(
-                                        text = movie.voteCount.toString(),
-                                        color = MaterialTheme.colorScheme.secondary,
-                                        fontWeight = FontWeight.Bold
+                                    Icon(
+                                        imageVector = Icons.Outlined.FavoriteBorder,
+                                        contentDescription = "Bookmark",
+                                        tint = Color.White
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = "Release: ${movie.releaseDate}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
                         }
+                        Spacer(modifier = Modifier.height(18.dp))
+                        Text(
+                            text = movie.title,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 26.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = movie.overview,
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Rating", fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    text = String.format("%.1f", movie.voteAverage),
+                                    color = MaterialTheme.colorScheme.tertiary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Popularity", fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    text = String.format("%.1f", movie.popularity),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Votes", fontWeight = FontWeight.SemiBold)
+                                Text(
+                                    text = movie.voteCount.toString(),
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Release: ${movie.releaseDate}",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }

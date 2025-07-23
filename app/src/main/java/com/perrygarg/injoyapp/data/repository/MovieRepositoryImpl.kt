@@ -94,4 +94,7 @@ class MovieRepositoryImpl(
                 }
             }
         ).flow.map { pagingData -> pagingData.map { it.toDomain() } }
+
+    override fun searchMoviesByTitle(query: String): Flow<List<Movie>> =
+        movieDao.searchMoviesByTitle(query).map { list -> list.map { it.toDomain() } }
 } 

@@ -29,6 +29,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.perrygarg.injoyapp.ui.theme.InJoyTheme
 import org.koin.androidx.compose.koinViewModel
+import androidx.navigation.NavOptionsBuilder
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -80,16 +81,27 @@ class MainActivity : ComponentActivity() {
                             val navigationEvent by homeViewModel.navigationEvent.collectAsStateWithLifecycle(null)
                             LaunchedEffect(navigationEvent) {
                                 navigationEvent?.let { movieId ->
-                                    navController.navigate("detail/$movieId")
+                                    navController.navigate("detail/$movieId") {
+                                        launchSingleTop = true
+                                        popUpTo("home") { inclusive = false }
+                                    }
                                 }
                             }
                         }
                         composable("search") {
-                            SearchScreen()
+                            SearchScreen { movieId ->
+                                navController.navigate("detail/$movieId") {
+                                    launchSingleTop = true
+                                    popUpTo("home") { inclusive = false }
+                                }
+                            }
                         }
                         composable("saved") {
                             SavedMoviesScreen { movieId ->
-                                navController.navigate("detail/$movieId")
+                                navController.navigate("detail/$movieId") {
+                                    launchSingleTop = true
+                                    popUpTo("home") { inclusive = false }
+                                }
                             }
                         }
                         composable(
@@ -102,7 +114,17 @@ class MainActivity : ComponentActivity() {
                             val movieId = backStackEntry.arguments?.getInt("movieId") ?: -1
                             MovieDetailScreen(
                                 movieId = movieId,
-                                onBack = { navController.popBackStack() }
+                                onBack = {
+                                    // If only detail is in stack, pop to home
+                                    if (navController.previousBackStackEntry?.destination?.route == null) {
+                                        navController.navigate("home") {
+                                            popUpTo("home") { inclusive = true }
+                                            launchSingleTop = true
+                                        }
+                                    } else {
+                                        navController.popBackStack()
+                                    }
+                                }
                             )
                         }
                     }

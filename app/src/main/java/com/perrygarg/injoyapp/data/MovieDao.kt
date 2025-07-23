@@ -40,4 +40,7 @@ interface MovieDao {
     ORDER BY c.position ASC
     """)
     fun pagingSourceByCategory(category: String): PagingSource<Int, MovieEntity>
+
+    @Query("SELECT * FROM movies WHERE LOWER(title) LIKE '%' || LOWER(:query) || '%' ORDER BY popularity DESC")
+    fun searchMoviesByTitle(query: String): Flow<List<MovieEntity>>
 } 

@@ -22,6 +22,8 @@ import retrofit2.converter.gson.GsonConverterFactory
 import com.perrygarg.injoyapp.domain.GetTrendingMoviesPagerUseCase
 import com.perrygarg.injoyapp.domain.GetNowPlayingMoviesPagerUseCase
 import com.perrygarg.injoyapp.domain.SearchMoviesPagerUseCase
+import com.perrygarg.injoyapp.domain.SearchMoviesByTitleUseCase
+import kotlinx.coroutines.flow.MutableStateFlow
 
 val appModule = module {
     single {
@@ -60,6 +62,8 @@ val appModule = module {
     factory { GetTrendingMoviesPagerUseCase(get()) }
     factory { GetNowPlayingMoviesPagerUseCase(get()) }
     factory { SearchMoviesPagerUseCase(get()) }
+    factory { SearchMoviesByTitleUseCase(get()) }
+    single { MutableStateFlow(false) } // isOffline state
     viewModel {
         HomeViewModel(
             updateBookmarkUseCase = get(),
@@ -82,7 +86,9 @@ val appModule = module {
     viewModel {
         SearchViewModel(
             searchMoviesPagerUseCase = get(),
-            updateBookmarkUseCase = get()
+            searchMoviesByTitleUseCase = get(),
+            updateBookmarkUseCase = get(),
+            isOffline = get()
         )
     }
 } 

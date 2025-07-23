@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.perrygarg.injoyapp.domain.SearchMoviesPagerUseCase
+import com.perrygarg.injoyapp.domain.SearchMoviesByTitleUseCase
 import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 import com.perrygarg.injoyapp.domain.model.Movie
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,7 +22,9 @@ import kotlinx.coroutines.launch
 
 class SearchViewModel(
     private val searchMoviesPagerUseCase: SearchMoviesPagerUseCase,
-    private val updateBookmarkUseCase: UpdateBookmarkUseCase
+    private val searchMoviesByTitleUseCase: SearchMoviesByTitleUseCase,
+    private val updateBookmarkUseCase: UpdateBookmarkUseCase,
+    val isOffline: StateFlow<Boolean>
 ) : ViewModel() {
     private val _query = MutableStateFlow("")
     val query: StateFlow<String> = _query.asStateFlow()
@@ -30,7 +33,7 @@ class SearchViewModel(
     val searchResults = _query
         .debounce(500)
         .flatMapLatest { q ->
-            if (q.isBlank()) {
+            if (q.isBlank() || isOffline.value) {
                 flowOf(PagingData.empty())
             } else {
                 searchMoviesPagerUseCase(q)
@@ -38,6 +41,19 @@ class SearchViewModel(
         }
         .cachedIn(viewModelScope)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PagingData.empty())
+
+    val offlineResults = _query
+        .debounce(500)
+        .flatMapLatest { q ->
+            if (q.isBlank() || !isOffline.value) {
+                flowOf(emptyList())
+            } else {
+                searchMoviesByTitleUseCase(q)
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val isOfflineWarning: StateFlow<Boolean> = isOffline
 
     fun onQueryChanged(newQuery: String) {
         _query.value = newQuery

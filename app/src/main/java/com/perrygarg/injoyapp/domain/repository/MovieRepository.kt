@@ -11,4 +11,5 @@ interface MovieRepository {
     suspend fun getMovieById(id: Int): Movie?
     fun getBookmarkedMovies(): Flow<List<Movie>>
     fun searchMoviesPager(query: String): Flow<PagingData<Movie>>
+    fun searchMoviesByTitle(query: String): Flow<List<Movie>>
 } 
