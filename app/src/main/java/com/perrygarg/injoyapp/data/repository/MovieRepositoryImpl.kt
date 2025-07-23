@@ -9,12 +9,11 @@ import androidx.paging.PagingState
 import androidx.paging.map
 import com.perrygarg.injoyapp.data.MovieApiService
 import com.perrygarg.injoyapp.data.MovieDao
+import com.perrygarg.injoyapp.data.MovieEntity
 import com.perrygarg.injoyapp.data.mediator.NowPlayingRemoteMediator
 import com.perrygarg.injoyapp.data.mediator.TrendingRemoteMediator
 import com.perrygarg.injoyapp.data.toDomain
 import com.perrygarg.injoyapp.data.toEntity
-import com.perrygarg.injoyapp.data.MovieEntity
-import com.perrygarg.injoyapp.data.MovieCategoryCrossRef
 import com.perrygarg.injoyapp.domain.model.Movie
 import com.perrygarg.injoyapp.domain.model.MovieCategory
 import com.perrygarg.injoyapp.domain.repository.MovieRepository
@@ -69,7 +68,7 @@ class MovieRepositoryImpl(
 
     override fun searchMoviesPager(query: String): Flow<PagingData<Movie>> =
         Pager(
-            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+            config = PagingConfig(pageSize = 20, enablePlaceholders = false, prefetchDistance = 1),
             pagingSourceFactory = {
                 object : PagingSource<Int, MovieEntity>() {
                     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MovieEntity> {
