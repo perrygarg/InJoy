@@ -67,7 +67,8 @@ fun SearchScreen(
                         MovieCard(
                             movie = movie,
                             onBookmarkClick = { viewModel.toggleBookmark(movie) },
-                            onClick = { onMovieClick(movie.id) }
+                            onClick = { onMovieClick(movie.id) },
+                            showBookmarkIcon = false
                         )
                     }
                 }

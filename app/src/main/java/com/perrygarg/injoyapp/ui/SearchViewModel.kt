@@ -3,6 +3,7 @@ package com.perrygarg.injoyapp.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.perrygarg.injoyapp.domain.SearchMoviesPagerUseCase
 import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 import com.perrygarg.injoyapp.domain.model.Movie
@@ -35,6 +36,7 @@ class SearchViewModel(
                 searchMoviesPagerUseCase(q)
             }
         }
+        .cachedIn(viewModelScope)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PagingData.empty())
 
     fun onQueryChanged(newQuery: String) {

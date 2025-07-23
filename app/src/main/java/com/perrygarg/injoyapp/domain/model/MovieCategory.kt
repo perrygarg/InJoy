@@ -6,6 +6,6 @@ enum class MovieCategory(val value: String) {
     SEARCH("SEARCH");
 
     companion object {
-        fun fromValue(value: String): MovieCategory? = values().find { it.value == value }
+        fun fromValue(value: String): MovieCategory? = MovieCategory.entries.find { it.value == value }
     }
 } 
