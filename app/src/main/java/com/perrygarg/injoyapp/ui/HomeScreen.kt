@@ -20,18 +20,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -108,7 +105,7 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
 
     val onBookmarkClick: (Movie) -> Unit = { viewModel.toggleBookmark(it) }
 
-    val gradient = Brush.verticalGradient(
+    Brush.verticalGradient(
         colors = listOf(
             MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f),
@@ -124,8 +121,6 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
             if (!isOffline) {
                 trendingPagingItems.refresh()
                 nowPlayingPagingItems.refresh()
-                viewModel.fetchTrending()
-                viewModel.fetchNowPlaying()
             }
         },
         indicatorPadding = contentPadding
@@ -183,40 +178,6 @@ fun SectionHeader(title: String) {
 }
 
 @Composable
-fun MovieSection(
-    state: SectionUiState<Movie>,
-    onBookmarkClick: (Movie) -> Unit,
-    onRetry: () -> Unit
-) {
-    when (state) {
-        is SectionUiState.Loading -> {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(4) { ShimmerMovieCardPlaceholder() }
-            }
-        }
-        is SectionUiState.Error -> {
-            ErrorState(message = state.message, onRetry = onRetry)
-        }
-        is SectionUiState.Empty -> {
-            NoDataState()
-        }
-        is SectionUiState.Success -> {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(state.data) { movie ->
-                    MovieCard(movie = movie, onBookmarkClick = onBookmarkClick)
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun TrendingMoviePagingSection(
     pagingItems: LazyPagingItems<Movie>,
     onBookmarkClick: (Movie) -> Unit,
@@ -238,7 +199,9 @@ fun TrendingMoviePagingSection(
             if (pagingItems.itemCount == 0) {
                 NoDataState()
             } else {
+                val listState = rememberLazyListState()
                 LazyRow(
+                    state = listState,
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -279,7 +242,9 @@ fun NowPlayingMoviePagingSection(
             if (pagingItems.itemCount == 0) {
                 NoDataState()
             } else {
+                val listState = rememberLazyListState()
                 LazyRow(
+                    state = listState,
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -505,7 +470,7 @@ fun MovieCard(
                         Text("No Image", textAlign = TextAlign.Center)
                     }
                 }
-                IconButton(
+                /*IconButton(
                     onClick = { onBookmarkClick(movie) },
                     modifier = Modifier.align(Alignment.TopEnd)
                 ) {
@@ -522,7 +487,7 @@ fun MovieCard(
                             tint = Color.White
                         )
                     }
-                }
+                }*/
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(

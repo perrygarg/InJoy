@@ -13,4 +13,3 @@ data class Movie(
     val isBookmarked: Boolean = false
 ) 
 
-fun Movie.copyWithBookmark(bookmarked: Boolean): Movie = this.copy(isBookmarked = bookmarked) 

@@ -1,13 +1,12 @@
 package com.perrygarg.injoyapp.data
 
+import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import androidx.room.Transaction
 import kotlinx.coroutines.flow.Flow
-import androidx.paging.PagingSource
 
 data class MovieIdBookmark(val id: Int, val isBookmarked: Boolean)
 
@@ -25,23 +24,11 @@ interface MovieDao {
     @Query("SELECT * FROM movies WHERE id = :id LIMIT 1")
     suspend fun getMovieById(id: Int): MovieEntity?
 
-    @Transaction
-    @Query("""
-        SELECT m.* FROM movies m
-        INNER JOIN MovieCategoryCrossRef c ON m.id = c.movieId
-        WHERE c.category = :category
-        ORDER BY c.position ASC
-    """)
-    fun getMoviesByCategory(category: String): Flow<List<MovieEntity>>
-
     @Query("SELECT id, isBookmarked FROM movies WHERE id IN (:ids)")
     suspend fun getBookmarksForIds(ids: List<Int>): List<MovieIdBookmark>
 
     @Query("DELETE FROM MovieCategoryCrossRef WHERE category = :category")
     suspend fun clearCategory(category: String)
-
-    @Query("DELETE FROM movies WHERE id NOT IN (SELECT movieId FROM MovieCategoryCrossRef)")
-    suspend fun deleteOrphanMovies()
 
     @Query("SELECT * FROM movies WHERE isBookmarked = 1 ORDER BY popularity DESC")
     fun getBookmarkedMovies(): Flow<List<MovieEntity>>
