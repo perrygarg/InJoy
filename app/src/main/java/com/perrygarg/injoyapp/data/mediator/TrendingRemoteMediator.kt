@@ -1,17 +1,17 @@
 package com.perrygarg.injoyapp.data.mediator
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import com.perrygarg.injoyapp.data.MovieApiService
+import com.perrygarg.injoyapp.data.MovieCategoryCrossRef
 import com.perrygarg.injoyapp.data.MovieDao
 import com.perrygarg.injoyapp.data.MovieEntity
-import com.perrygarg.injoyapp.data.MovieCategoryCrossRef
 import com.perrygarg.injoyapp.data.toEntity
 import retrofit2.HttpException
 import java.io.IOException
-import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -58,11 +58,11 @@ class TrendingRemoteMediator(
             Log.d("TrendingRemoteMediator", "[${now()}] RETURN MediatorResult.Success for page=$page")
             MediatorResult.Success(endOfPaginationReached = page >= response.total_pages)
         } catch (e: IOException) {
-            Log.e("TrendingRemoteMediator", "[${now()}] Network error, no local data.", e)
-            MediatorResult.Error(e)
+            Log.e("TrendingRemoteMediator", "[${now()}] Network error, using cached data.", e)
+            return MediatorResult.Success(endOfPaginationReached = false) // fallback to DB
         } catch (e: HttpException) {
-            Log.e("TrendingRemoteMediator", "[${now()}] HTTP error, no local data.", e)
-            MediatorResult.Error(e)
+            Log.e("TrendingRemoteMediator", "[${now()}] HTTP error, using cached data.", e)
+            return MediatorResult.Success(endOfPaginationReached = false) // fallback to DB
         }
     }
 }

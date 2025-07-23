@@ -27,10 +27,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -198,7 +201,9 @@ fun TrendingMoviePagingSection(
             }
         }
         is LoadState.Error -> {
-            ErrorState(message = "Failed to load movies", onRetry = { pagingItems.retry() })
+            if (pagingItems.itemCount == 0) {
+                ErrorState(message = "Failed to load movies", onRetry = { pagingItems.retry() })
+            }
         }
         else -> {
             if (pagingItems.itemCount == 0) {
@@ -213,7 +218,7 @@ fun TrendingMoviePagingSection(
                     items(count = pagingItems.itemCount) { index ->
                         val movie = pagingItems[index]
                         if (movie != null) {
-                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick, onClick = { onMovieClick(movie) })
+                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick, onClick = { onMovieClick(movie) }, showBookmarkIcon = false)
                         }
                     }
                     if (pagingItems.loadState.append is LoadState.Loading) {
@@ -256,7 +261,7 @@ fun NowPlayingMoviePagingSection(
                     items(count = pagingItems.itemCount) { index ->
                         val movie = pagingItems[index]
                         if (movie != null) {
-                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick, onClick = { onMovieClick(movie) })
+                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick, onClick = { onMovieClick(movie) }, showBookmarkIcon = false)
                         }
                     }
                     if (pagingItems.loadState.append is LoadState.Loading) {
@@ -419,7 +424,8 @@ fun ShimmerMovieCardPlaceholder() {
 fun MovieCard(
     movie: Movie,
     onBookmarkClick: (Movie) -> Unit,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    showBookmarkIcon: Boolean = true
 ) {
     // Subtle vertical gradient for card background
     val cardGradient = Brush.verticalGradient(
@@ -475,24 +481,26 @@ fun MovieCard(
                         Text("No Image", textAlign = TextAlign.Center)
                     }
                 }
-                /*IconButton(
-                    onClick = { onBookmarkClick(movie) },
-                    modifier = Modifier.align(Alignment.TopEnd)
-                ) {
-                    if (movie.isBookmarked) {
-                        Icon(
-                            imageVector = Icons.Filled.Favorite,
-                            contentDescription = "Bookmarked",
-                            tint = Color.Red
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Bookmark",
-                            tint = Color.White
-                        )
+                if (showBookmarkIcon) {
+                    IconButton(
+                        onClick = { onBookmarkClick(movie) },
+                        modifier = Modifier.align(Alignment.TopEnd)
+                    ) {
+                        if (movie.isBookmarked) {
+                            Icon(
+                                imageVector = Icons.Filled.Favorite,
+                                contentDescription = "Bookmarked",
+                                tint = Color.Red
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Bookmark",
+                                tint = Color.White
+                            )
+                        }
                     }
-                }*/
+                }
             }
             Spacer(modifier = Modifier.height(10.dp))
             Text(

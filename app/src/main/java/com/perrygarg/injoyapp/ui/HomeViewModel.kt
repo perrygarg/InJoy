@@ -3,6 +3,7 @@ package com.perrygarg.injoyapp.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 import com.perrygarg.injoyapp.domain.model.Movie
 import com.perrygarg.injoyapp.domain.repository.MovieRepository
@@ -20,11 +21,11 @@ class HomeViewModel(
 ) : ViewModel() {
 
     val trendingPagingData: Flow<PagingData<Movie>> by lazy {
-        repository.getTrendingMoviesPager()
+        repository.getTrendingMoviesPager().cachedIn(viewModelScope)
     }
 
     val nowPlayingPagingData: Flow<PagingData<Movie>> by lazy {
-        repository.getNowPlayingMoviesPager()
+        repository.getNowPlayingMoviesPager().cachedIn(viewModelScope)
     }
 
     private val _refreshing = MutableStateFlow(false)
