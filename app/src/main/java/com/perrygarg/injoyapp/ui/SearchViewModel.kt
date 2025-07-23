@@ -4,8 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.perrygarg.injoyapp.domain.SearchMoviesPagerUseCase
 import com.perrygarg.injoyapp.domain.SearchMoviesByTitleUseCase
+import com.perrygarg.injoyapp.domain.SearchMoviesPagerUseCase
 import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 import com.perrygarg.injoyapp.domain.model.Movie
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -42,6 +42,7 @@ class SearchViewModel(
         .cachedIn(viewModelScope)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), PagingData.empty())
 
+    @OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
     val offlineResults = _query
         .debounce(500)
         .flatMapLatest { q ->

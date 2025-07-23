@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavType
@@ -28,14 +29,23 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.perrygarg.injoyapp.ui.theme.InJoyTheme
+import kotlinx.coroutines.flow.MutableStateFlow
+import org.koin.android.ext.android.get
 import org.koin.androidx.compose.koinViewModel
-import androidx.navigation.NavOptionsBuilder
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val offlineStateFlow = get<MutableStateFlow<Boolean>>()
+            val context = LocalContext.current
+            LaunchedEffect(context) {
+                observeNetworkStatus(context)
+                    .collect { isOnline ->
+                        offlineStateFlow.value = !isOnline
+                    }
+            }
             InJoyTheme {
                 val navController = rememberNavController()
                 val bottomNavItems = listOf(
