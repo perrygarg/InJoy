@@ -19,8 +19,13 @@ class HomeViewModel(
     private val repository: MovieRepository
 ) : ViewModel() {
 
-    val trendingPagingData: Flow<PagingData<Movie>> = repository.getTrendingMoviesPager()
-    val nowPlayingPagingData: Flow<PagingData<Movie>> = repository.getNowPlayingMoviesPager()
+    val trendingPagingData: Flow<PagingData<Movie>> by lazy {
+        repository.getTrendingMoviesPager()
+    }
+
+    val nowPlayingPagingData: Flow<PagingData<Movie>> by lazy {
+        repository.getNowPlayingMoviesPager()
+    }
 
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing.asStateFlow()

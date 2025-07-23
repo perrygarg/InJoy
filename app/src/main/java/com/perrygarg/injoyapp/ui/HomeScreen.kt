@@ -2,7 +2,9 @@ package com.perrygarg.injoyapp.ui
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.Network
 import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,6 +52,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
@@ -73,14 +76,14 @@ fun isNetworkAvailable(context: Context): Boolean {
 fun observeNetworkStatus(context: Context) = callbackFlow<Boolean> {
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val callback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: android.net.Network) {
+        override fun onAvailable(network: Network) {
             trySend(true)
         }
-        override fun onLost(network: android.net.Network) {
+        override fun onLost(network: Network) {
             trySend(false)
         }
     }
-    val networkRequest = android.net.NetworkRequest.Builder()
+    val networkRequest = NetworkRequest.Builder()
         .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         .build()
     connectivityManager.registerNetworkCallback(networkRequest, callback)
@@ -105,7 +108,7 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
 
     val onBookmarkClick: (Movie) -> Unit = { viewModel.toggleBookmark(it) }
 
-    Brush.verticalGradient(
+    val gradient = Brush.verticalGradient(
         colors = listOf(
             MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
             MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f),
@@ -116,6 +119,8 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
     )
 
     SwipeRefresh(
+        modifier = Modifier.fillMaxSize()
+            .background(gradient),
         state = rememberSwipeRefreshState(isRefreshing = refreshing),
         onRefresh = {
             if (!isOffline) {
@@ -184,7 +189,7 @@ fun TrendingMoviePagingSection(
     onMovieClick: (Movie) -> Unit
 ) {
     when (pagingItems.loadState.refresh) {
-        is androidx.paging.LoadState.Loading -> {
+        is LoadState.Loading -> {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -192,7 +197,7 @@ fun TrendingMoviePagingSection(
                 items(4) { ShimmerMovieCardPlaceholder() }
             }
         }
-        is androidx.paging.LoadState.Error -> {
+        is LoadState.Error -> {
             ErrorState(message = "Failed to load movies", onRetry = { pagingItems.retry() })
         }
         else -> {
@@ -211,7 +216,7 @@ fun TrendingMoviePagingSection(
                             MovieCard(movie = movie, onBookmarkClick = onBookmarkClick, onClick = { onMovieClick(movie) })
                         }
                     }
-                    if (pagingItems.loadState.append is androidx.paging.LoadState.Loading) {
+                    if (pagingItems.loadState.append is LoadState.Loading) {
                         item { ShimmerMovieCardPlaceholder() }
                     }
                 }
@@ -227,7 +232,7 @@ fun NowPlayingMoviePagingSection(
     onMovieClick: (Movie) -> Unit
 ) {
     when (pagingItems.loadState.refresh) {
-        is androidx.paging.LoadState.Loading -> {
+        is LoadState.Loading -> {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -235,7 +240,7 @@ fun NowPlayingMoviePagingSection(
                 items(4) { ShimmerMovieCardPlaceholder() }
             }
         }
-        is androidx.paging.LoadState.Error -> {
+        is LoadState.Error -> {
             ErrorState(message = "Failed to load movies", onRetry = { pagingItems.retry() })
         }
         else -> {
@@ -254,7 +259,7 @@ fun NowPlayingMoviePagingSection(
                             MovieCard(movie = movie, onBookmarkClick = onBookmarkClick, onClick = { onMovieClick(movie) })
                         }
                     }
-                    if (pagingItems.loadState.append is androidx.paging.LoadState.Loading) {
+                    if (pagingItems.loadState.append is LoadState.Loading) {
                         item { ShimmerMovieCardPlaceholder() }
                     }
                 }
