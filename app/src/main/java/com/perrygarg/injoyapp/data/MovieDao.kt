@@ -43,9 +43,14 @@ interface MovieDao {
     @Query("DELETE FROM movies WHERE id NOT IN (SELECT movieId FROM MovieCategoryCrossRef)")
     suspend fun deleteOrphanMovies()
 
-    @Query("SELECT COUNT(*) FROM movies WHERE category = :category")
-    suspend fun countByCategory(category: String): Int
-
     @Query("SELECT * FROM movies WHERE isBookmarked = 1 ORDER BY popularity DESC")
     fun getBookmarkedMovies(): Flow<List<MovieEntity>>
+
+    @Query("""
+    SELECT m.* FROM movies m
+    INNER JOIN MovieCategoryCrossRef c ON m.id = c.movieId
+    WHERE c.category = :category
+    ORDER BY c.position ASC
+    """)
+    fun pagingSourceByCategory(category: String): PagingSource<Int, MovieEntity>
 } 

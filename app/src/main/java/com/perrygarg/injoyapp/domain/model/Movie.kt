@@ -10,7 +10,6 @@ data class Movie(
     val voteAverage: Float,
     val voteCount: Int,
     val popularity: Float,
-    val category: String, // "TRENDING" or "NOW_PLAYING"
     val isBookmarked: Boolean = false
 ) 
 
