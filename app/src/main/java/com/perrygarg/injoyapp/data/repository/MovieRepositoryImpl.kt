@@ -4,6 +4,8 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
 import androidx.paging.map
 import com.perrygarg.injoyapp.data.MovieApiService
 import com.perrygarg.injoyapp.data.MovieDao
@@ -11,7 +13,10 @@ import com.perrygarg.injoyapp.data.mediator.NowPlayingRemoteMediator
 import com.perrygarg.injoyapp.data.mediator.TrendingRemoteMediator
 import com.perrygarg.injoyapp.data.toDomain
 import com.perrygarg.injoyapp.data.toEntity
+import com.perrygarg.injoyapp.data.MovieEntity
+import com.perrygarg.injoyapp.data.MovieCategoryCrossRef
 import com.perrygarg.injoyapp.domain.model.Movie
+import com.perrygarg.injoyapp.domain.model.MovieCategory
 import com.perrygarg.injoyapp.domain.repository.MovieRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -46,7 +51,7 @@ class MovieRepositoryImpl(
                 enablePlaceholders = false
             ),
             remoteMediator = TrendingRemoteMediator(movieDao, movieApiService),
-            pagingSourceFactory = { movieDao.pagingSourceByCategory("TRENDING") }
+            pagingSourceFactory = { movieDao.pagingSourceByCategory(MovieCategory.TRENDING.value) }
         ).flow.map { pagingData -> pagingData.map { it.toDomain() } }
 
     @OptIn(ExperimentalPagingApi::class)
@@ -59,6 +64,35 @@ class MovieRepositoryImpl(
                 enablePlaceholders = false
             ),
             remoteMediator = NowPlayingRemoteMediator(movieDao, movieApiService),
-            pagingSourceFactory = { movieDao.pagingSourceByCategory("NOW_PLAYING") }
+            pagingSourceFactory = { movieDao.pagingSourceByCategory(MovieCategory.NOW_PLAYING.value) }
+        ).flow.map { pagingData -> pagingData.map { it.toDomain() } }
+
+    override fun searchMoviesPager(query: String): Flow<PagingData<Movie>> =
+        Pager(
+            config = PagingConfig(pageSize = 20, enablePlaceholders = false),
+            pagingSourceFactory = {
+                object : PagingSource<Int, MovieEntity>() {
+                    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, MovieEntity> {
+                        val page = params.key ?: 1
+                        return try {
+                            val response = movieApiService.searchMovies(query = query, page = page)
+                            val movies = response.results.map { dto ->
+                                val existing = movieDao.getMovieById(dto.id)
+                                dto.toEntity().copy(isBookmarked = existing?.isBookmarked ?: false)
+                            }
+                            // Save as orphaned movies (no category cross-ref)
+                            movieDao.insertMovies(movies)
+                            LoadResult.Page(
+                                data = movies,
+                                prevKey = if (page == 1) null else page - 1,
+                                nextKey = if (page < response.total_pages) page + 1 else null
+                            )
+                        } catch (e: Exception) {
+                            LoadResult.Error(e)
+                        }
+                    }
+                    override fun getRefreshKey(state: PagingState<Int, MovieEntity>): Int? = 1
+                }
+            }
         ).flow.map { pagingData -> pagingData.map { it.toDomain() } }
 } 

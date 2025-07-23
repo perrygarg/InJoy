@@ -10,6 +10,7 @@ import com.perrygarg.injoyapp.data.MovieCategoryCrossRef
 import com.perrygarg.injoyapp.data.MovieDao
 import com.perrygarg.injoyapp.data.MovieEntity
 import com.perrygarg.injoyapp.data.toEntity
+import com.perrygarg.injoyapp.domain.model.MovieCategory
 import retrofit2.HttpException
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -48,11 +49,11 @@ class NowPlayingRemoteMediator(
             }
             Log.d("NowPlayingRemoteMediator", "[${now()}] BEFORE DB INSERT page=$page, count=${movies.size}")
             if (loadType == LoadType.REFRESH) {
-                movieDao.clearCategory("NOW_PLAYING")
+                movieDao.clearCategory(MovieCategory.NOW_PLAYING.value)
             }
             movieDao.insertMovies(movies)
             val crossRefs = response.results.mapIndexed { index, dto ->
-                MovieCategoryCrossRef(movieId = dto.id, category = "NOW_PLAYING", position = index)
+                MovieCategoryCrossRef(movieId = dto.id, category = MovieCategory.NOW_PLAYING.value, position = index)
             }
             movieDao.insertMovieCategoryCrossRefs(crossRefs)
             Log.d("NowPlayingRemoteMediator", "[${now()}] RETURN MediatorResult.Success for page=$page")

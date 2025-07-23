@@ -53,11 +53,12 @@ fun MovieDetailScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                windowInsets = TopAppBarDefaults.windowInsets
+                modifier = Modifier
+                    .statusBarsPadding()
             )
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
+        Box(modifier = Modifier.fillMaxSize().padding(top = 0.dp, bottom = padding.calculateBottomPadding())) {
             when (state) {
                 is MovieDetailUiState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))

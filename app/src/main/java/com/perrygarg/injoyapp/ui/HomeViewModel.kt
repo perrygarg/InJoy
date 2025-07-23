@@ -6,7 +6,8 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 import com.perrygarg.injoyapp.domain.model.Movie
-import com.perrygarg.injoyapp.domain.repository.MovieRepository
+import com.perrygarg.injoyapp.domain.GetTrendingMoviesPagerUseCase
+import com.perrygarg.injoyapp.domain.GetNowPlayingMoviesPagerUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,15 +18,16 @@ import kotlinx.coroutines.launch
 
 class HomeViewModel(
     private val updateBookmarkUseCase: UpdateBookmarkUseCase,
-    private val repository: MovieRepository
+    private val getTrendingMoviesPagerUseCase: GetTrendingMoviesPagerUseCase,
+    private val getNowPlayingMoviesPagerUseCase: GetNowPlayingMoviesPagerUseCase
 ) : ViewModel() {
 
     val trendingPagingData: Flow<PagingData<Movie>> by lazy {
-        repository.getTrendingMoviesPager().cachedIn(viewModelScope)
+        getTrendingMoviesPagerUseCase().cachedIn(viewModelScope)
     }
 
     val nowPlayingPagingData: Flow<PagingData<Movie>> by lazy {
-        repository.getNowPlayingMoviesPager().cachedIn(viewModelScope)
+        getNowPlayingMoviesPagerUseCase().cachedIn(viewModelScope)
     }
 
     private val _refreshing = MutableStateFlow(false)
