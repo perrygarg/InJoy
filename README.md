@@ -16,7 +16,7 @@ It fetches from TMDB, caches locally with Room, and supports offline search and 
 - Local DB: Movies are persisted using Room ORM
 - Offline-first: UI loads from DB, not from API directly
 - Debounced Search (Bonus): Search begins after user stops typing
-- Dummy Deeplink (Bonus): NavHost-based navigation with deep link support
+- Share Deeplink (Bonus): NavHost-based navigation with deep link support
 - ViewModels & Flows (Bonus): Purely ViewModels and Flow based approach
 - Coroutines (Bonus): Entire data flow is async & structured
 - Repository Pattern: Clean separation of concerns
