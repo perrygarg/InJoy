@@ -5,35 +5,24 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.ErrorOutline
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -44,27 +33,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
-import coil.compose.rememberAsyncImagePainter
-import com.google.accompanist.placeholder.PlaceholderHighlight
-import com.google.accompanist.placeholder.material.shimmer
-import com.google.accompanist.placeholder.placeholder
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import com.perrygarg.injoyapp.domain.model.Movie
+import com.perrygarg.injoyapp.ui.components.MovieCard
+import com.perrygarg.injoyapp.ui.components.OfflineWarningTooltip
+import com.perrygarg.injoyapp.ui.components.SectionHeader
+import com.perrygarg.injoyapp.ui.components.ShimmerMovieCardPlaceholder
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -113,12 +96,12 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
 
     val gradient = Brush.verticalGradient(
         colors = listOf(
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.18f),
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.12f),
-            MaterialTheme.colorScheme.background
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.28f),
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+            MaterialTheme.colorScheme.background.copy(alpha = 1f)
         ),
         startY = 0f,
-        endY = 1200f
+        endY = 1000f
     )
 
     SwipeRefresh(
@@ -135,21 +118,21 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize()
-                .padding(top = 30.dp),
-            verticalArrangement = Arrangement.spacedBy(18.dp)
+                .padding(top = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             if (isOffline) {
                 item { OfflineWarningTooltip() }
             }
             item { SectionHeader(title = "Trending Movies") }
             item {
-                TrendingMoviePagingSection(trendingPagingItems, onBookmarkClick) { movie ->
+                CommonMoviePagingSection(trendingPagingItems, onBookmarkClick) { movie ->
                     viewModel.navigateToDetail(movie)
                 }
             }
             item { SectionHeader(title = "Now Playing Movies") }
             item {
-                NowPlayingMoviePagingSection(nowPlayingPagingItems, onBookmarkClick) { movie ->
+                CommonMoviePagingSection(nowPlayingPagingItems, onBookmarkClick) { movie ->
                     viewModel.navigateToDetail(movie)
                 }
             }
@@ -158,35 +141,7 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
 }
 
 @Composable
-fun SectionHeader(title: String) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(start = 20.dp, top = 18.dp, bottom = 6.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .width(6.dp)
-                .height(28.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = RoundedCornerShape(3.dp)
-                )
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.titleLarge.copy(
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp
-            ),
-            modifier = Modifier
-        )
-    }
-}
-
-@Composable
-fun TrendingMoviePagingSection(
+fun CommonMoviePagingSection(
     pagingItems: LazyPagingItems<Movie>,
     onBookmarkClick: (Movie) -> Unit,
     onMovieClick: (Movie) -> Unit
@@ -194,7 +149,7 @@ fun TrendingMoviePagingSection(
     when (pagingItems.loadState.refresh) {
         is LoadState.Loading -> {
             LazyRow(
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(4) { ShimmerMovieCardPlaceholder() }
@@ -204,49 +159,6 @@ fun TrendingMoviePagingSection(
             if (pagingItems.itemCount == 0) {
                 ErrorState(message = "Failed to load movies", onRetry = { pagingItems.retry() })
             }
-        }
-        else -> {
-            if (pagingItems.itemCount == 0) {
-                NoDataState()
-            } else {
-                val listState = rememberLazyListState()
-                LazyRow(
-                    state = listState,
-                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(count = pagingItems.itemCount) { index ->
-                        val movie = pagingItems[index]
-                        if (movie != null) {
-                            MovieCard(movie = movie, onBookmarkClick = onBookmarkClick, onClick = { onMovieClick(movie) }, showBookmarkIcon = false)
-                        }
-                    }
-                    if (pagingItems.loadState.append is LoadState.Loading) {
-                        item { ShimmerMovieCardPlaceholder() }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun NowPlayingMoviePagingSection(
-    pagingItems: LazyPagingItems<Movie>,
-    onBookmarkClick: (Movie) -> Unit,
-    onMovieClick: (Movie) -> Unit
-) {
-    when (pagingItems.loadState.refresh) {
-        is LoadState.Loading -> {
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(4) { ShimmerMovieCardPlaceholder() }
-            }
-        }
-        is LoadState.Error -> {
-            ErrorState(message = "Failed to load movies", onRetry = { pagingItems.retry() })
         }
         else -> {
             if (pagingItems.itemCount == 0) {
@@ -324,217 +236,5 @@ fun NoDataState() {
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center
         )
-    }
-}
-
-@Composable
-fun OfflineWarningTooltip() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 20.dp, bottom = 4.dp, top = 20.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = Icons.Filled.CloudOff,
-            contentDescription = "Offline",
-            tint = MaterialTheme.colorScheme.secondary,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = "You are offline. Data may be stale.",
-            color = MaterialTheme.colorScheme.secondary,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-@Composable
-fun ShimmerMovieCardPlaceholder() {
-    val cardGradient = Brush.verticalGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.04f),
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
-        ),
-        startY = 0f,
-        endY = 400f
-    )
-    Card(
-        modifier = Modifier
-            .width(160.dp)
-            .padding(vertical = 6.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent,
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(cardGradient)
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Box(
-                modifier = Modifier
-                    .height(180.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .placeholder(
-                        visible = true,
-                        highlight = PlaceholderHighlight.shimmer(),
-                        color = Color(0xFFEEEEEE),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Box(
-                modifier = Modifier
-                    .height(18.dp)
-                    .fillMaxWidth(0.7f)
-                    .clip(RoundedCornerShape(6.dp))
-                    .placeholder(
-                        visible = true,
-                        highlight = PlaceholderHighlight.shimmer(),
-                        color = Color(0xFFEEEEEE),
-                        shape = RoundedCornerShape(6.dp)
-                    )
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Box(
-                modifier = Modifier
-                    .height(14.dp)
-                    .fillMaxWidth(0.4f)
-                    .clip(RoundedCornerShape(6.dp))
-                    .placeholder(
-                        visible = true,
-                        highlight = PlaceholderHighlight.shimmer(),
-                        color = Color(0xFFEEEEEE),
-                        shape = RoundedCornerShape(6.dp)
-                    )
-            )
-        }
-    }
-}
-
-@Composable
-fun MovieCard(
-    movie: Movie,
-    onBookmarkClick: (Movie) -> Unit,
-    onClick: (() -> Unit)? = null,
-    showBookmarkIcon: Boolean = true
-) {
-    // Subtle vertical gradient for card background
-    val cardGradient = Brush.verticalGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.04f),
-            MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
-        ),
-        startY = 0f,
-        endY = 400f
-    )
-    Card(
-        modifier = Modifier
-            .width(160.dp)
-            .padding(vertical = 6.dp)
-            .clickable(enabled = onClick != null) { onClick?.invoke() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.Transparent,
-        )
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(cardGradient)
-                .padding(10.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            val posterUrl = if (movie.posterPath.isNotBlank())
-                "https://image.tmdb.org/t/p/w500${movie.posterPath}"
-            else null
-            Box(
-                modifier = Modifier
-                    .height(180.dp)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.04f))
-            ) {
-                if (posterUrl != null) {
-                    Image(
-                        painter = rememberAsyncImagePainter(posterUrl),
-                        contentDescription = movie.title,
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("No Image", textAlign = TextAlign.Center)
-                    }
-                }
-                if (showBookmarkIcon) {
-                    IconButton(
-                        onClick = { onBookmarkClick(movie) },
-                        modifier = Modifier.align(Alignment.TopEnd)
-                    ) {
-                        if (movie.isBookmarked) {
-                            Icon(
-                                imageVector = Icons.Filled.Favorite,
-                                contentDescription = "Bookmarked",
-                                tint = Color.Red
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Bookmark",
-                                tint = Color.White
-                            )
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = movie.title,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 17.sp
-                ),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "★",
-                    color = MaterialTheme.colorScheme.tertiary,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(end = 2.dp)
-                )
-                Text(
-                    text = String.format("%.1f", movie.voteAverage),
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-            }
-        }
     }
 }

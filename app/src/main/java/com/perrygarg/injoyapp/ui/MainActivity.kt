@@ -18,6 +18,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -38,41 +40,46 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            val offlineStateFlow = get<MutableStateFlow<Boolean>>()
-            val context = LocalContext.current
-            LaunchedEffect(context) {
-                observeNetworkStatus(context)
-                    .collect { isOnline ->
-                        offlineStateFlow.value = !isOnline
-                    }
-            }
             InJoyTheme {
                 val navController = rememberNavController()
+                val context = LocalContext.current
+                val offlineStateFlow = get<MutableStateFlow<Boolean>>()
+
+                LaunchedEffect(context) {
+                    observeNetworkStatus(context)
+                        .collect { isOnline ->
+                            offlineStateFlow.value = !isOnline
+                        }
+                }
+
                 val bottomNavItems = listOf(
                     BottomNavItem("Home", "home", Icons.Filled.Home),
                     BottomNavItem("Search", "search", Icons.Filled.Search),
                     BottomNavItem("Saved", "saved", Icons.Filled.Favorite)
                 )
+                val currentParentRoute = rememberSaveable { mutableStateOf("home") }
                 val currentRoute = navController.currentBackStackEntryFlow.collectAsStateWithLifecycle(null).value?.destination?.route
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        NavigationBar {
-                            bottomNavItems.forEach { item ->
-                                NavigationBarItem(
-                                    selected = currentRoute == item.route || (item.route == "home" && currentRoute == null),
-                                    onClick = {
-                                        if (currentRoute != item.route) {
-                                            navController.navigate(item.route) {
-                                                popUpTo(navController.graph.startDestinationId) { saveState = true }
-                                                launchSingleTop = true
-                                                restoreState = true
+                        if (!currentRoute.orEmpty().startsWith("detail")) {
+                            NavigationBar {
+                                bottomNavItems.forEach { item ->
+                                    NavigationBarItem(
+                                        selected = currentRoute == item.route || (item.route == "home" && currentRoute == null),
+                                        onClick = {
+                                            if (currentRoute != item.route) {
+                                                navController.navigate(item.route) {
+                                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                                    launchSingleTop = true
+                                                    restoreState = true
+                                                }
                                             }
-                                        }
-                                    },
-                                    icon = { Icon(item.icon, contentDescription = item.label) },
-                                    label = { Text(item.label) }
-                                )
+                                        },
+                                        icon = { Icon(item.icon, contentDescription = item.label) },
+                                        label = { Text(item.label) }
+                                    )
+                                }
                             }
                         }
                     }
@@ -91,27 +98,21 @@ class MainActivity : ComponentActivity() {
                             val navigationEvent by homeViewModel.navigationEvent.collectAsStateWithLifecycle(null)
                             LaunchedEffect(navigationEvent) {
                                 navigationEvent?.let { movieId ->
-                                    navController.navigate("detail/$movieId") {
-                                        launchSingleTop = true
-                                        popUpTo("home") { inclusive = false }
-                                    }
+                                    currentParentRoute.value = "home"
+                                    navController.navigate("detail/$movieId")
                                 }
                             }
                         }
                         composable("search") {
                             SearchScreen { movieId ->
-                                navController.navigate("detail/$movieId") {
-                                    launchSingleTop = true
-                                    popUpTo("home") { inclusive = false }
-                                }
+                                currentParentRoute.value = "search"
+                                navController.navigate("detail/$movieId")
                             }
                         }
                         composable("saved") {
                             SavedMoviesScreen { movieId ->
-                                navController.navigate("detail/$movieId") {
-                                    launchSingleTop = true
-                                    popUpTo("home") { inclusive = false }
-                                }
+                                currentParentRoute.value = "saved"
+                                navController.navigate("detail/$movieId")
                             }
                         }
                         composable(
@@ -125,14 +126,11 @@ class MainActivity : ComponentActivity() {
                             MovieDetailScreen(
                                 movieId = movieId,
                                 onBack = {
-                                    // If only detail is in stack, pop to home
-                                    if (navController.previousBackStackEntry?.destination?.route == null) {
-                                        navController.navigate("home") {
-                                            popUpTo("home") { inclusive = true }
+                                    val popped = navController.popBackStack()
+                                    if (!popped) {
+                                        navController.navigate(currentParentRoute.value) {
                                             launchSingleTop = true
                                         }
-                                    } else {
-                                        navController.popBackStack()
                                     }
                                 }
                             )

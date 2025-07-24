@@ -1,6 +1,7 @@
 package com.perrygarg.injoyapp.ui
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,10 +28,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.compose.collectAsLazyPagingItems
+import com.perrygarg.injoyapp.ui.components.MovieCard
+import com.perrygarg.injoyapp.ui.components.OfflineWarningTooltip
+import com.perrygarg.injoyapp.ui.components.ShimmerMovieCardPlaceholder
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -55,8 +60,19 @@ fun SearchScreen(
         isOfflineState.value = isOffline
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    val gradient = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primary.copy(alpha = 0.28f),
+            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.18f),
+            MaterialTheme.colorScheme.background.copy(alpha = 1f)
+        ),
+        startY = 0f,
+        endY = 1000f
+    )
+
+    Column(modifier = Modifier.fillMaxSize().background(brush = gradient)) {
         if (isOfflineWarning) {
+            Spacer(modifier = Modifier.height(8.dp))
             OfflineWarningTooltip()
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -126,10 +142,10 @@ fun SearchBar(value: String, onValueChange: (String) -> Unit, modifier: Modifier
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
-        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = Color.Gray) },
+        leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
         placeholder = { Text("Search movies...", style = MaterialTheme.typography.bodyLarge) },
         modifier = modifier
-            .height(48.dp)
+            .height(54.dp)
             .clip(MaterialTheme.shapes.medium),
         shape = MaterialTheme.shapes.medium,
         colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(

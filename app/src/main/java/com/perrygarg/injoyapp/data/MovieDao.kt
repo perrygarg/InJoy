@@ -33,12 +33,7 @@ interface MovieDao {
     @Query("SELECT * FROM movies WHERE isBookmarked = 1 ORDER BY popularity DESC")
     fun getBookmarkedMovies(): Flow<List<MovieEntity>>
 
-    @Query("""
-    SELECT m.* FROM movies m
-    INNER JOIN MovieCategoryCrossRef c ON m.id = c.movieId
-    WHERE c.category = :category
-    ORDER BY c.position ASC
-    """)
+    @Query("SELECT m.* FROM movies m INNER JOIN MovieCategoryCrossRef c ON m.id = c.movieId WHERE c.category = :category ORDER BY c.position ASC")
     fun pagingSourceByCategory(category: String): PagingSource<Int, MovieEntity>
 
     @Query("SELECT * FROM movies WHERE LOWER(title) LIKE '%' || LOWER(:query) || '%' ORDER BY popularity DESC")
