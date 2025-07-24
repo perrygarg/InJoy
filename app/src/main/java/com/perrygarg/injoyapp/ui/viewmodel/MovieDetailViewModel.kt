@@ -1,5 +1,6 @@
 package com.perrygarg.injoyapp.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.perrygarg.injoyapp.domain.model.Movie
@@ -46,4 +47,20 @@ class MovieDetailViewModel(
             loadMovie(movie.id)
         }
     }
+
+    fun shareMovie(movie: Movie, context: Context) {
+        viewModelScope.launch {
+            val shareIntent = android.content.Intent().apply {
+                action = android.content.Intent.ACTION_SEND
+                type = "text/plain"
+                putExtra(
+                    android.content.Intent.EXTRA_TEXT,
+                    "Hey, I found this great movie on InJoy:\n\n ${movie.title}\nCheck out here: injoy://movie/${movie.id}\n"
+                )
+            }
+            val chooser = android.content.Intent.createChooser(shareIntent, "Share via")
+            context.startActivity(chooser)
+        }
+    }
+
 } 

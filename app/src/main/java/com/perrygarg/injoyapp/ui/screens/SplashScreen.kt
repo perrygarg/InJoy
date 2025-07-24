@@ -28,20 +28,17 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.perrygarg.injoyapp.R
 import kotlinx.coroutines.delay
 
 @Composable
-fun SplashScreen(navController: NavController) {
+fun SplashScreen(onTimeout: () -> Unit) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         visible = true
         delay(2000)
-        navController.navigate("home") {
-            popUpTo("splash") { inclusive = true }
-        }
+        onTimeout()
     }
 
     val gradientBackground = Brush.verticalGradient(
@@ -57,12 +54,10 @@ fun SplashScreen(navController: NavController) {
             .background(gradientBackground),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn(animationSpec = tween(500)) + scaleIn(initialScale = 0.85f)
+                enter = fadeIn(tween(500)) + scaleIn(initialScale = 0.85f)
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_launcher_splash),
@@ -75,7 +70,7 @@ fun SplashScreen(navController: NavController) {
 
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn(animationSpec = tween(500, delayMillis = 200))
+                enter = fadeIn(tween(500, delayMillis = 200))
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(

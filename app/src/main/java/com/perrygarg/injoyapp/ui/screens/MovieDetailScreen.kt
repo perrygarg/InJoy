@@ -20,6 +20,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -139,20 +141,35 @@ fun MovieDetailScreen(
                                         Text("No Image", textAlign = TextAlign.Center)
                                     }
                                 }
-                                IconButton(
-                                    onClick = { viewModel.toggleBookmark(movie) },
-                                    modifier = Modifier.padding(8.dp)
-                                ) {
-                                    if (movie.isBookmarked) {
+                                Column {
+                                    IconButton(
+                                        onClick = { viewModel.toggleBookmark(movie) },
+                                        modifier = Modifier.padding(4.dp)
+                                    ) {
+                                        if (movie.isBookmarked) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Favorite,
+                                                contentDescription = "Bookmarked",
+                                                tint = Color.Red
+                                            )
+                                        } else {
+                                            Icon(
+                                                imageVector = Icons.Outlined.FavoriteBorder,
+                                                contentDescription = "Bookmark",
+                                                tint = Color.White
+                                            )
+                                        }
+                                    }
+
+                                    val context = LocalContext.current
+
+                                    IconButton(
+                                        onClick = { viewModel.shareMovie(movie, context = context) },
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 0.dp)
+                                    ) {
                                         Icon(
-                                            imageVector = Icons.Filled.Favorite,
-                                            contentDescription = "Bookmarked",
-                                            tint = Color.Red
-                                        )
-                                    } else {
-                                        Icon(
-                                            imageVector = Icons.Outlined.FavoriteBorder,
-                                            contentDescription = "Bookmark",
+                                            imageVector = Icons.Filled.Share,
+                                            contentDescription = "Share",
                                             tint = Color.White
                                         )
                                     }
