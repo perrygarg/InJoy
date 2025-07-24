@@ -1,16 +1,18 @@
 package com.perrygarg.injoyapp.data.mediator
 
+import android.util.Log
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import com.perrygarg.injoyapp.data.MovieApiService
-import com.perrygarg.injoyapp.data.MovieDao
-import com.perrygarg.injoyapp.data.MovieEntity
-import com.perrygarg.injoyapp.data.toEntity
+import com.perrygarg.injoyapp.data.local.MovieCategoryCrossRef
+import com.perrygarg.injoyapp.data.local.MovieDao
+import com.perrygarg.injoyapp.data.local.MovieEntity
+import com.perrygarg.injoyapp.data.mapper.toEntity
+import com.perrygarg.injoyapp.data.remote.MovieApiService
+import com.perrygarg.injoyapp.domain.model.MovieCategory
 import retrofit2.HttpException
 import java.io.IOException
-import android.util.Log
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -43,35 +45,25 @@ class TrendingRemoteMediator(
             val bookmarks = movieDao.getBookmarksForIds(ids).associateBy { it.id }
             val movies = response.results.map { dto ->
                 val isBookmarked = bookmarks[dto.id]?.isBookmarked ?: false
-                dto.toEntity("TRENDING").copy(isBookmarked = isBookmarked)
+                dto.toEntity().copy(isBookmarked = isBookmarked)
             }
             Log.d("TrendingRemoteMediator", "[${now()}] BEFORE DB INSERT page=$page, count=${movies.size}")
             if (loadType == LoadType.REFRESH) {
-                movieDao.clearMoviesByCategory("TRENDING")
+                movieDao.clearCategory(MovieCategory.TRENDING.value)
             }
             movieDao.insertMovies(movies)
-            val count = movieDao.countByCategory("TRENDING")
-            Log.d("TrendingRemoteMediator", "[${now()}] AFTER DB INSERT, DB now has $count items for TRENDING after page $page")
+            val crossRefs = response.results.mapIndexed { index, dto ->
+                MovieCategoryCrossRef(movieId = dto.id, category = MovieCategory.TRENDING.value, position = index)
+            }
+            movieDao.insertMovieCategoryCrossRefs(crossRefs)
             Log.d("TrendingRemoteMediator", "[${now()}] RETURN MediatorResult.Success for page=$page")
             MediatorResult.Success(endOfPaginationReached = page >= response.total_pages)
         } catch (e: IOException) {
-            val localCount = movieDao.countByCategory("TRENDING")
-            return if (localCount > 0) {
-                Log.w("TrendingRemoteMediator", "[${now()}] Network error, but Room has $localCount items. Showing stale data.")
-                MediatorResult.Success(endOfPaginationReached = false)
-            } else {
-                Log.e("TrendingRemoteMediator", "[${now()}] Network error, no local data.", e)
-                MediatorResult.Error(e)
-            }
+            Log.e("TrendingRemoteMediator", "[${now()}] Network error, using cached data.", e)
+            return MediatorResult.Success(endOfPaginationReached = false) // fallback to DB
         } catch (e: HttpException) {
-            val localCount = movieDao.countByCategory("TRENDING")
-            return if (localCount > 0) {
-                Log.w("TrendingRemoteMediator", "[${now()}] HTTP error, but Room has $localCount items. Showing stale data.")
-                MediatorResult.Success(endOfPaginationReached = false)
-            } else {
-                Log.e("TrendingRemoteMediator", "[${now()}] HTTP error, no local data.", e)
-                MediatorResult.Error(e)
-            }
+            Log.e("TrendingRemoteMediator", "[${now()}] HTTP error, using cached data.", e)
+            return MediatorResult.Success(endOfPaginationReached = false) // fallback to DB
         }
     }
 }

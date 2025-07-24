@@ -1,8 +1,6 @@
-package com.perrygarg.injoyapp.data
+package com.perrygarg.injoyapp.data.remote
 
 import com.squareup.moshi.Json
-import retrofit2.http.GET
-import retrofit2.http.Query
 
 // Data Transfer Objects (DTOs) for TMDB API
 
@@ -24,17 +22,3 @@ data class MovieResponseDto(
     @Json(name = "total_pages") val total_pages: Int,
     @Json(name = "total_results") val total_results: Int
 )
-
-interface MovieApiService {
-    @GET("movie/popular")
-    suspend fun getTrendingMovies(
-        @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
-    ): MovieResponseDto
-
-    @GET("movie/now_playing")
-    suspend fun getNowPlayingMovies(
-        @Query("language") language: String = "en-US",
-        @Query("page") page: Int = 1
-    ): MovieResponseDto
-} 

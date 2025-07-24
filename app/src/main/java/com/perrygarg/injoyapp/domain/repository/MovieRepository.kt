@@ -1,14 +1,15 @@
 package com.perrygarg.injoyapp.domain.repository
 
+import androidx.paging.PagingData
 import com.perrygarg.injoyapp.domain.model.Movie
 import kotlinx.coroutines.flow.Flow
-import androidx.paging.PagingData
 
 interface MovieRepository {
-    suspend fun fetchTrendingMovies(): Result<Unit>
-    suspend fun fetchNowPlayingMovies(): Result<Unit>
-    fun getMoviesByCategory(category: String): Flow<List<Movie>>
     fun getTrendingMoviesPager(): Flow<PagingData<Movie>>
     fun getNowPlayingMoviesPager(): Flow<PagingData<Movie>>
     suspend fun updateBookmark(movie: Movie, bookmarked: Boolean): Result<Unit>
+    suspend fun getMovieById(id: Int): Movie?
+    fun getBookmarkedMovies(): Flow<List<Movie>>
+    fun searchMoviesPager(query: String): Flow<PagingData<Movie>>
+    fun searchMoviesByTitle(query: String): Flow<List<Movie>>
 } 

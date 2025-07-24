@@ -1,8 +1,10 @@
-package com.perrygarg.injoyapp.data
+package com.perrygarg.injoyapp.data.mapper
 
+import com.perrygarg.injoyapp.data.local.MovieEntity
+import com.perrygarg.injoyapp.data.remote.MovieDto
 import com.perrygarg.injoyapp.domain.model.Movie
 
-fun MovieDto.toEntity(category: String): MovieEntity = MovieEntity(
+fun MovieDto.toEntity(): MovieEntity = MovieEntity(
     id = this.id,
     title = this.title ?: "",
     overview = this.overview ?: "",
@@ -11,9 +13,7 @@ fun MovieDto.toEntity(category: String): MovieEntity = MovieEntity(
     backdropPath = this.backdrop_path ?: "",
     voteAverage = this.vote_average ?: 0f,
     voteCount = this.vote_count ?: 0,
-    popularity = this.popularity ?: 0f,
-    category = category,
-    isBookmarked = false
+    popularity = this.popularity ?: 0f
 )
 
 fun MovieEntity.toDomain(): Movie = Movie(
@@ -26,11 +26,10 @@ fun MovieEntity.toDomain(): Movie = Movie(
     voteAverage = this.voteAverage,
     voteCount = this.voteCount,
     popularity = this.popularity,
-    category = this.category,
     isBookmarked = this.isBookmarked
 )
 
-fun Movie.toEntity(category: String = this.category): MovieEntity = MovieEntity(
+fun Movie.toEntity(): MovieEntity = MovieEntity(
     id = this.id,
     title = this.title,
     overview = this.overview,
@@ -40,6 +39,5 @@ fun Movie.toEntity(category: String = this.category): MovieEntity = MovieEntity(
     voteAverage = this.voteAverage,
     voteCount = this.voteCount,
     popularity = this.popularity,
-    category = category,
     isBookmarked = this.isBookmarked
 ) 

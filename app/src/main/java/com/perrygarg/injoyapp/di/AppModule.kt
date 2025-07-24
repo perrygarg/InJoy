@@ -1,22 +1,31 @@
 package com.perrygarg.injoyapp.di
 
-import android.app.Application
 import androidx.room.Room
-import com.perrygarg.injoyapp.data.AppDatabase
-import com.perrygarg.injoyapp.data.MovieApiService
+import com.perrygarg.injoyapp.BuildConfig
+import com.perrygarg.injoyapp.data.local.AppDatabase
+import com.perrygarg.injoyapp.data.remote.MovieApiService
 import com.perrygarg.injoyapp.data.repository.MovieRepositoryImpl
-import com.perrygarg.injoyapp.domain.GetNowPlayingMoviesUseCase
-import com.perrygarg.injoyapp.domain.GetTrendingMoviesUseCase
 import com.perrygarg.injoyapp.domain.repository.MovieRepository
-import com.perrygarg.injoyapp.ui.HomeViewModel
+import com.perrygarg.injoyapp.domain.usecase.GetBookmarkedMoviesUseCase
+import com.perrygarg.injoyapp.domain.usecase.GetMovieDetailUseCase
+import com.perrygarg.injoyapp.domain.usecase.GetNowPlayingMoviesPagerUseCase
+import com.perrygarg.injoyapp.domain.usecase.GetTrendingMoviesPagerUseCase
+import com.perrygarg.injoyapp.domain.usecase.SearchMoviesByTitleUseCase
+import com.perrygarg.injoyapp.domain.usecase.SearchMoviesPagerUseCase
+import com.perrygarg.injoyapp.domain.usecase.UpdateBookmarkUseCase
+import com.perrygarg.injoyapp.ui.viewmodel.HomeViewModel
+import com.perrygarg.injoyapp.ui.viewmodel.MovieDetailViewModel
+import com.perrygarg.injoyapp.ui.viewmodel.SavedMoviesViewModel
+import com.perrygarg.injoyapp.ui.viewmodel.SearchViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import okhttp3.OkHttpClient
 import org.koin.android.ext.koin.androidApplication
 import org.koin.androidx.viewmodel.dsl.viewModel
+import org.koin.dsl.bind
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import okhttp3.OkHttpClient
-import com.perrygarg.injoyapp.BuildConfig
-import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 
 val appModule = module {
     single {
@@ -49,16 +58,41 @@ val appModule = module {
     }
     single { get<Retrofit>().create(MovieApiService::class.java) }
     single<MovieRepository> { MovieRepositoryImpl(get(), get()) }
-    factory { GetTrendingMoviesUseCase(get()) }
-    factory { GetNowPlayingMoviesUseCase(get()) }
     factory { UpdateBookmarkUseCase(get()) }
+    factory { GetMovieDetailUseCase(get()) }
+    factory { GetBookmarkedMoviesUseCase(get()) }
+    factory { GetTrendingMoviesPagerUseCase(get()) }
+    factory { GetNowPlayingMoviesPagerUseCase(get()) }
+    factory { SearchMoviesPagerUseCase(get()) }
+    factory { SearchMoviesByTitleUseCase(get()) }
+    single {
+        MutableStateFlow(false)
+    } bind StateFlow::class
     viewModel {
         HomeViewModel(
-            getTrendingMoviesUseCase = get(),
-            getNowPlayingMoviesUseCase = get(),
-            getMoviesByCategory = { category -> get<MovieRepository>().getMoviesByCategory(category) },
             updateBookmarkUseCase = get(),
-            repository = get()
+            getTrendingMoviesPagerUseCase = get(),
+            getNowPlayingMoviesPagerUseCase = get()
+        )
+    }
+    viewModel {
+        MovieDetailViewModel(
+            getMovieDetailUseCase = get(),
+            updateBookmarkUseCase = get()
+        )
+    }
+    viewModel {
+        SavedMoviesViewModel(
+            getBookmarkedMoviesUseCase = get(),
+            updateBookmarkUseCase = get()
+        )
+    }
+    viewModel {
+        SearchViewModel(
+            searchMoviesPagerUseCase = get(),
+            searchMoviesByTitleUseCase = get(),
+            updateBookmarkUseCase = get(),
+            isOffline = get()
         )
     }
 } 
