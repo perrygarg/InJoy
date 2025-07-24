@@ -35,6 +35,7 @@ import com.perrygarg.injoyapp.ui.screens.HomeScreen
 import com.perrygarg.injoyapp.ui.screens.MovieDetailScreen
 import com.perrygarg.injoyapp.ui.screens.SavedMoviesScreen
 import com.perrygarg.injoyapp.ui.screens.SearchScreen
+import com.perrygarg.injoyapp.ui.screens.SplashScreen
 import com.perrygarg.injoyapp.ui.screens.observeNetworkStatus
 import com.perrygarg.injoyapp.ui.theme.InJoyTheme
 import com.perrygarg.injoyapp.ui.viewmodel.HomeViewModel
@@ -69,7 +70,7 @@ class MainActivity : ComponentActivity() {
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
-                        if (!currentRoute.orEmpty().startsWith("detail")) {
+                        if (!currentRoute.orEmpty().startsWith("detail") && currentRoute != "splash") {
                             NavigationBar {
                                 bottomNavItems.forEach { item ->
                                     NavigationBarItem(
@@ -93,9 +94,12 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavHost(
                         navController = navController,
-                        startDestination = "home",
+                        startDestination = "splash",
                         modifier = Modifier.padding(innerPadding)
                     ) {
+                        composable("splash") {
+                            SplashScreen(navController = navController)
+                        }
                         composable("home") {
                             val homeViewModel: HomeViewModel = koinViewModel()
                             HomeScreen(
