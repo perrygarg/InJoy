@@ -1,4 +1,4 @@
-package com.perrygarg.injoyapp.ui
+package com.perrygarg.injoyapp.ui.screens
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -48,6 +48,7 @@ import com.perrygarg.injoyapp.ui.components.MovieCard
 import com.perrygarg.injoyapp.ui.components.OfflineWarningTooltip
 import com.perrygarg.injoyapp.ui.components.SectionHeader
 import com.perrygarg.injoyapp.ui.components.ShimmerMovieCardPlaceholder
+import com.perrygarg.injoyapp.ui.viewmodel.HomeViewModel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -231,7 +232,7 @@ fun NoDataState() {
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "No data available",
+            text = "No data available. Use pull to refresh.",
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center

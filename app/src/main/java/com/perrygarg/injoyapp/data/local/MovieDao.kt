@@ -1,4 +1,4 @@
-package com.perrygarg.injoyapp.data
+package com.perrygarg.injoyapp.data.local
 
 import androidx.paging.PagingSource
 import androidx.room.Dao

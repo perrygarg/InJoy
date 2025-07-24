@@ -1,13 +1,13 @@
-package com.perrygarg.injoyapp.ui
+package com.perrygarg.injoyapp.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
-import com.perrygarg.injoyapp.domain.SearchMoviesByTitleUseCase
-import com.perrygarg.injoyapp.domain.SearchMoviesPagerUseCase
-import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 import com.perrygarg.injoyapp.domain.model.Movie
+import com.perrygarg.injoyapp.domain.usecase.SearchMoviesByTitleUseCase
+import com.perrygarg.injoyapp.domain.usecase.SearchMoviesPagerUseCase
+import com.perrygarg.injoyapp.domain.usecase.UpdateBookmarkUseCase
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,4 +1,4 @@
-package com.perrygarg.injoyapp.ui
+package com.perrygarg.injoyapp.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.perrygarg.injoyapp.ui.components.MovieCard
 import com.perrygarg.injoyapp.ui.components.SectionHeader
+import com.perrygarg.injoyapp.ui.viewmodel.SavedMoviesViewModel
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -52,13 +54,13 @@ fun SavedMoviesScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Filled.Favorite,
+                    imageVector = Icons.Filled.Favorite,
                     contentDescription = "No Saved Movies",
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 Text(
-                    text = "No saved movies yet!",
+                    text = "No bookmarked movies yet!",
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

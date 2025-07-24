@@ -1,5 +1,7 @@
-package com.perrygarg.injoyapp.data
+package com.perrygarg.injoyapp.data.mapper
 
+import com.perrygarg.injoyapp.data.local.MovieEntity
+import com.perrygarg.injoyapp.data.remote.MovieDto
 import com.perrygarg.injoyapp.domain.model.Movie
 
 fun MovieDto.toEntity(): MovieEntity = MovieEntity(

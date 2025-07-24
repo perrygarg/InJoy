@@ -1,4 +1,4 @@
-package com.perrygarg.injoyapp.ui
+package com.perrygarg.injoyapp.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.perrygarg.injoyapp.R
+import com.perrygarg.injoyapp.ui.viewmodel.MovieDetailUiState
+import com.perrygarg.injoyapp.ui.viewmodel.MovieDetailViewModel
 import org.koin.androidx.compose.koinViewModel
 import java.util.Locale
 

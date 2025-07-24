@@ -1,10 +1,10 @@
-package com.perrygarg.injoyapp.ui
+package com.perrygarg.injoyapp.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.perrygarg.injoyapp.domain.GetMovieDetailUseCase
-import com.perrygarg.injoyapp.domain.UpdateBookmarkUseCase
 import com.perrygarg.injoyapp.domain.model.Movie
+import com.perrygarg.injoyapp.domain.usecase.GetMovieDetailUseCase
+import com.perrygarg.injoyapp.domain.usecase.UpdateBookmarkUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

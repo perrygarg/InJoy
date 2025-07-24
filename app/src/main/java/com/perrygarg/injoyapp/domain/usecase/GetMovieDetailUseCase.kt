@@ -1,4 +1,4 @@
-package com.perrygarg.injoyapp.domain
+package com.perrygarg.injoyapp.domain.usecase
 
 import com.perrygarg.injoyapp.domain.model.Movie
 import com.perrygarg.injoyapp.domain.repository.MovieRepository

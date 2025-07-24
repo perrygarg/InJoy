@@ -5,11 +5,11 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
-import com.perrygarg.injoyapp.data.MovieApiService
-import com.perrygarg.injoyapp.data.MovieCategoryCrossRef
-import com.perrygarg.injoyapp.data.MovieDao
-import com.perrygarg.injoyapp.data.MovieEntity
-import com.perrygarg.injoyapp.data.toEntity
+import com.perrygarg.injoyapp.data.local.MovieCategoryCrossRef
+import com.perrygarg.injoyapp.data.local.MovieDao
+import com.perrygarg.injoyapp.data.local.MovieEntity
+import com.perrygarg.injoyapp.data.mapper.toEntity
+import com.perrygarg.injoyapp.data.remote.MovieApiService
 import com.perrygarg.injoyapp.domain.model.MovieCategory
 import retrofit2.HttpException
 import java.io.IOException

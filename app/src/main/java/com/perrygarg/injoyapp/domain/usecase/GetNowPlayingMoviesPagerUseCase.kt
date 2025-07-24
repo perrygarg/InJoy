@@ -1,4 +1,4 @@
-package com.perrygarg.injoyapp.domain
+package com.perrygarg.injoyapp.domain.usecase
 
 import androidx.paging.PagingData
 import com.perrygarg.injoyapp.domain.model.Movie

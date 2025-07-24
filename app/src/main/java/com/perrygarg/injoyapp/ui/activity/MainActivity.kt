@@ -1,4 +1,4 @@
-package com.perrygarg.injoyapp.ui
+package com.perrygarg.injoyapp.ui.activity
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -30,7 +31,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
+import com.perrygarg.injoyapp.ui.screens.HomeScreen
+import com.perrygarg.injoyapp.ui.screens.MovieDetailScreen
+import com.perrygarg.injoyapp.ui.screens.SavedMoviesScreen
+import com.perrygarg.injoyapp.ui.screens.SearchScreen
+import com.perrygarg.injoyapp.ui.screens.observeNetworkStatus
 import com.perrygarg.injoyapp.ui.theme.InJoyTheme
+import com.perrygarg.injoyapp.ui.viewmodel.HomeViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.android.ext.android.get
 import org.koin.androidx.compose.koinViewModel
@@ -142,4 +149,4 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class BottomNavItem(val label: String, val route: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
+data class BottomNavItem(val label: String, val route: String, val icon: ImageVector)

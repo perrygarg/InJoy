@@ -1,4 +1,4 @@
-package com.perrygarg.injoyapp.ui
+package com.perrygarg.injoyapp.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -20,11 +20,11 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,10 +32,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.paging.LoadState
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.perrygarg.injoyapp.ui.components.MovieCard
 import com.perrygarg.injoyapp.ui.components.OfflineWarningTooltip
 import com.perrygarg.injoyapp.ui.components.ShimmerMovieCardPlaceholder
+import com.perrygarg.injoyapp.ui.viewmodel.SearchViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -50,8 +52,7 @@ fun SearchScreen(
     val searchResults = viewModel.searchResults.collectAsLazyPagingItems()
     val offlineResults by viewModel.offlineResults.collectAsStateWithLifecycle()
     val isOffline by viewModel.isOffline.collectAsStateWithLifecycle()
-    val isTyping = searchResults.loadState.refresh is androidx.paging.LoadState.Loading && query.isNotBlank() && !isOffline
-    val coroutineScope = rememberCoroutineScope()
+    val isTyping = searchResults.loadState.refresh is LoadState.Loading && query.isNotBlank() && !isOffline
     val isOfflineWarning by viewModel.isOfflineWarning.collectAsStateWithLifecycle()
 
     // Observe network status and update isOffline
@@ -148,7 +149,7 @@ fun SearchBar(value: String, onValueChange: (String) -> Unit, modifier: Modifier
             .height(54.dp)
             .clip(MaterialTheme.shapes.medium),
         shape = MaterialTheme.shapes.medium,
-        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+        colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outline,
             cursorColor = MaterialTheme.colorScheme.primary
