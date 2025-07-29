@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
@@ -30,6 +31,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -93,6 +95,9 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
     val nowPlayingPagingItems = viewModel.nowPlayingPagingData.collectAsLazyPagingItems()
     val refreshing by viewModel.refreshing.collectAsStateWithLifecycle()
 
+    val trendingScrollState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
+    val nowPlayingScrollState = rememberSaveable(saver = LazyListState.Saver) { LazyListState() }
+
     val onBookmarkClick: (Movie) -> Unit = { viewModel.toggleBookmark(it) }
 
     val gradient = Brush.verticalGradient(
@@ -126,14 +131,14 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
                 item { OfflineWarningTooltip() }
             }
             item { SectionHeader(title = "Trending Movies") }
-            item {
-                CommonMoviePagingSection(trendingPagingItems, onBookmarkClick) { movie ->
+            item(key = "trending") {
+                CommonMoviePagingSection(trendingPagingItems, listState = trendingScrollState, onBookmarkClick) { movie ->
                     viewModel.navigateToDetail(movie)
                 }
             }
             item { SectionHeader(title = "Now Playing Movies") }
-            item {
-                CommonMoviePagingSection(nowPlayingPagingItems, onBookmarkClick) { movie ->
+            item(key = "now_playing") {
+                CommonMoviePagingSection(nowPlayingPagingItems, listState = nowPlayingScrollState, onBookmarkClick) { movie ->
                     viewModel.navigateToDetail(movie)
                 }
             }
@@ -144,6 +149,7 @@ fun HomeScreen(viewModel: HomeViewModel, contentPadding: PaddingValues = Padding
 @Composable
 fun CommonMoviePagingSection(
     pagingItems: LazyPagingItems<Movie>,
+    listState: LazyListState,
     onBookmarkClick: (Movie) -> Unit,
     onMovieClick: (Movie) -> Unit
 ) {

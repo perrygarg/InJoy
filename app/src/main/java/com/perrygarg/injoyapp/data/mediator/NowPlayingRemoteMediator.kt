@@ -53,7 +53,8 @@ class NowPlayingRemoteMediator(
             }
             movieDao.insertMovies(movies)
             val crossRefs = response.results.mapIndexed { index, dto ->
-                MovieCategoryCrossRef(movieId = dto.id, category = MovieCategory.NOW_PLAYING.value, position = index)
+                val absolutePosition = (page - 1) * state.config.pageSize + index
+                MovieCategoryCrossRef(movieId = dto.id, category = MovieCategory.NOW_PLAYING.value, position = absolutePosition)
             }
             movieDao.insertMovieCategoryCrossRefs(crossRefs)
             Log.d("NowPlayingRemoteMediator", "[${now()}] RETURN MediatorResult.Success for page=$page")
